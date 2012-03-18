@@ -1,6 +1,10 @@
 Qatrix
 ====
 
+Qatrix is a new kind of JavaScript framework targeting on building up high performance and flexible web application with less and friendly code. It`s free and open source.
+
+The Qatrix JavaScript framework is designed for high performance web application with flexible and useful functions with lightest file size.
+
 The features of Qatrix are:
 
 Hardware Accelerated Animation
