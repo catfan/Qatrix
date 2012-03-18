@@ -1,5 +1,5 @@
-Qatrix
-====
+[Qatrix](http://qatrix.com/)
+=====================
 
 Qatrix is a new kind of JavaScript framework targeting on building up high performance and flexible web application with less and friendly code. It`s free and open source.
 
@@ -26,3 +26,5 @@ Qatrix included a simple cache system to storage and fetch data with high speed.
 Incredible size
 ---------------
 Only 6KB compressed and gzipped file size with 60+ functions. Load script instantly without expectation.
+
+Read more and download: [http://qatrix.com](http://qatrix.com)
