@@ -513,6 +513,7 @@ var Qatrix = {
 	},
 	$text = function (elem, text)
 	{
+		$empty( elem );
 		elem.appendChild( document.createTextNode( text ) );
 	},
 	$className = {
