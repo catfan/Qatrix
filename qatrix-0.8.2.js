@@ -1,14 +1,13 @@
 /*
-	Qatrix JavaScript v0.8.1
+	Qatrix JavaScript v0.8.2
 
 	Copyright (c) 2012, The Qatrix project, Angel Lai
 	The Qatrix project is under MIT license.
 	For details, see the Qatrix web site: http://qatrix.com
 */
 
-
 var Qatrix = {
-		version: '0.8.1',
+		version: '0.8.2',
 		
 		rtrim: /(^\s*)|(\s*$)/g,
 		rcamelCase: /-([a-z])/ig,
@@ -30,18 +29,18 @@ var Qatrix = {
 		var i = 0,
 			length = haystack.length,
 			name;
-		if( length === undefined )
-		{
-			for ( name in haystack )
-			{
-				callback.call( haystack[name], name, haystack[name] );
-			}
-		}
-		else
+		if( length )
 		{
 			for ( ; i < length; ++i )
 			{
 				callback.call( haystack[i], i, haystack[i] );
+			}
+		}
+		else
+		{
+			for ( name in haystack )
+			{
+				callback.call( haystack[name], name, haystack[name] );
 			}
 		}
 	},
@@ -127,7 +126,7 @@ var Qatrix = {
 	$string = {
 		camelCase: function (string)
 		{
-			return string.replace( Qatrix.rcamelCase, function( match, letter ) {
+			return string.replace( '-ms-', 'ms-' ).replace( Qatrix.rcamelCase, function( match, letter ) {
 				return ( letter + '' ).toUpperCase();
 			});
 		},
@@ -877,7 +876,6 @@ var $browser = {};
 			msie10: /msie 10\.0/,
 			chrome : /chrome/,
 			firefox : /firefox/,
-			mozilla : /mozilla/,
 			opera : /opera/,
 			webkit : /webkit/,
 			iPad : /ipad/,
@@ -885,8 +883,8 @@ var $browser = {};
 			android : /android/
 			},
 		i;
-	for( i in rbrowser )
+	$each( rbrowser, function ( key, value )
 	{
-		$browser[ i ] = rbrowser[i].test(ua);
-	};
+		$browser[ key ] = rbrowser[key].test(ua);
+	});
 })();
