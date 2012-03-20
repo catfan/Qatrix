@@ -6,6 +6,7 @@
 	For details, see the Qatrix web site: http://qatrix.com
 */
 
+
 var Qatrix = {
 		version: '0.8.1',
 		
