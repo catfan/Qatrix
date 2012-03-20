@@ -491,7 +491,11 @@ var Qatrix = {
 	},
 	$remove = function (elem)
 	{
-	    return elem.parentNode.removeChild(elem);
+		if ( elem != null && elem.parentNode )
+		{
+			elem.parentNode.removeChild(elem);
+		}
+	    return elem;
 	},
 	$empty = function (elem)
 	{
@@ -761,7 +765,7 @@ var Qatrix = {
 		},
 		remove: function ()
 		{
-			$each(argument, function (i, key)
+			$each(arguments, function (i, key)
 			{
 				$cookie.set(key, '', -360);
 			});
