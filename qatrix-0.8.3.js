@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v0.8.2
+	Qatrix JavaScript v0.8.3
 
 	Copyright (c) 2012, The Qatrix project, Angel Lai
 	The Qatrix project is under MIT license.
@@ -7,7 +7,7 @@
 */
 
 var Qatrix = {
-		version: '0.8.2',
+		version: '0.8.3',
 		
 		rtrim: /(^\s*)|(\s*$)/g,
 		rcamelCase: /-([a-z])/ig,
@@ -18,7 +18,7 @@ var Qatrix = {
 		rvalidbraces: /(?:^|:|,)(?:\s*\[)+/g
 	},
 
-	//Compatible for other $ based library
+	//Compatible for other $ based libraries
 	$ = ( $ === undefined ) ? function (id)
 	{
 		return document.getElementById(id);
@@ -47,7 +47,7 @@ var Qatrix = {
 	$tag = function (elem, name, callback)
 	{
 		var match = elem.getElementsByTagName(name);
-		if(callback)
+		if( callback && match.length > 0 )
 		{
 			$each( match, function (i, item)
 			{
@@ -60,7 +60,7 @@ var Qatrix = {
 		function (elem, className, callback)
 		{
 			var match = elem.getElementsByClassName(className);
-			if(callback)
+			if( callback && match.length > 0 )
 			{
 				$each( match, function (i, item)
 				{
@@ -81,7 +81,7 @@ var Qatrix = {
 					match.push(item);
 				}
 			});
-			if(callback)
+			if( callback && match.length > 0)
 			{
 				$each( match, function (i, item)
 				{
@@ -181,6 +181,7 @@ var Qatrix = {
 			{
 				$attr.set( elem, 'data-' + name, value );
 			}
+			return elem;
 		},
 		remove: function (elem, name)
 		{
@@ -191,27 +192,33 @@ var Qatrix = {
 		data: {},
 		get: function (key)
 		{
-			return $cache.data[key];
+			var data = $cache.data[key];
+			return ( data ) ? data : null;
 		},
 		set: function (key, value)
 		{
 			$cache.data[ key ] = value;
+			return value;
 		},
 		inc: function (key)
 		{
-			return ( typeof $cache.data[ key ] === 'number' ) ? $cache.data[ key ]++ : $cache.data[ key ];  
+			var data = $cache.data[ key ];
+			return ( typeof data === 'number' ) ? $cache.data[ key ]++ : data;  
 		},
 		dec: function (key)
 		{
-			return ( typeof $cache.data[ key ] === 'number' ) ? $cache.data[ key ]-- : $cache.data[ key ];  
+			var data = $cache.data[ key ];
+			return ( typeof data === 'number' ) ? $cache.data[ key ]-- : data;  
 		},
 		remove: function (key)
 		{
 			delete $cache.data[ key ];
+			return true;
 		},
 		flush: function ()
 		{
 			$cache.data = {};
+			return true;
 		}
 	},
 	$event = {
@@ -238,6 +245,7 @@ var Qatrix = {
 			{
 				elem.attachEvent('on' + type, handler);
 			}
+			return elem;
 		},
 		remove: function (elem, type, handler)
 		{
@@ -250,6 +258,7 @@ var Qatrix = {
 				elem.detachEvent('on' + type, handler);
 			}
 			$data.remove( elem, 'event-' + type );
+			return elem;
 		},
 		handler: {
 			mouseenter: function (handler)
@@ -359,6 +368,7 @@ var Qatrix = {
 	        {
 	            $style.set(elem, $string.camelCase(name), $css.fix(name, value));
 	        }
+			return elem;
 	    },
 	    number: {
 	        'fontWeight': true,
@@ -437,6 +447,7 @@ var Qatrix = {
 	{
 		$style.set( elem, 'left', x + 'px' );
 		$style.set( elem, 'top', y + 'px' );
+		return elem;
 	},
 	$offset = function (elem)
 	{
@@ -514,11 +525,13 @@ var Qatrix = {
 		{
 			$append( $empty( elem ), html );
 		}
+		return elem;
 	},
 	$text = function (elem, text)
 	{
 		$empty( elem );
 		elem.appendChild( document.createTextNode( text ) );
+		return elem;
 	},
 	$className = {
 		add: function (elem, name)
@@ -543,10 +556,12 @@ var Qatrix = {
 					elem.className = oclass.join(' ');
 				}
 			}
+			return elem;
 		},
 		remove: function (elem, name)
 		{
 			elem.className = (name) ? $string.trim( elem.className.replace(name, '').split(/\s+/).join(' ') ) : '';
+			return elem;
 		}
 	},
 	$hide = function (elem)
@@ -653,6 +668,8 @@ var Qatrix = {
 					callback();
 				}
 			}, duration);
+			
+			return elem;
 		}
 	})():
 	function (elem, properties, duration, callback)
@@ -714,6 +731,8 @@ var Qatrix = {
 				callback();
 			}
 		}, duration);
+		
+		return elem;
 	},
 	$fadeout = function(elem, dur, callback)
 	{
