@@ -583,7 +583,7 @@ var Qatrix = {
                 elem.style.display = 'block';
             }) : argument.style.display = 'block';
         });
-    };
+    },
 	$animate = (
 	
 		//Using CSS3 transition for animation as possible.
