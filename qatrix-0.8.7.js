@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v0.8.6
+	Qatrix JavaScript v0.8.7
 
 	Copyright (c) 2012, The Qatrix project, Angel Lai
 	The Qatrix project is under MIT license.
@@ -7,7 +7,7 @@
 */
 
 var Qatrix = {
-		version: '0.8.6',
+		version: '0.8.7',
 		
 		rtrim: /(^\s*)|(\s*$)/g,
 		rcamelCase: /-([a-z])/ig,
@@ -45,7 +45,6 @@ var Qatrix = {
 			return node;
 		}
 	},
-
 	//Compatible for other $ based libraries
 	$ = ( $ === undefined ) ? function (id)
 	{
@@ -156,7 +155,6 @@ var Qatrix = {
 		{
 		    var style = Qatrix.Qselector.styleSheet,
 		        match = [];
-
 		    style.addRule(selector, 'q:a');
 		    $tag(document, '*', function (item)
 		    {
@@ -274,7 +272,7 @@ var Qatrix = {
 	    get: function (key)
 	    {
 	        var data = $cache.data[key];
-	        return (data) ? data : null;
+	        return (data || typeof data === 'number') ? data : null;
 	    },
 	    set: function (key, value)
 	    {
@@ -960,7 +958,6 @@ var Qatrix = {
 	};
 
 var $browser = {};
-
 (function () {
     var ua = navigator.userAgent.toLowerCase(),
 		rbrowser = {
@@ -970,7 +967,6 @@ var $browser = {};
 			msie8 : /msie 8\.0/,
 			msie9 : /msie 9\.0/,
 			msie10: /msie 10\.0/,
-			chrome : /chrome/,
 			firefox : /firefox/,
 			opera : /opera/,
 			webkit : /webkit/,
@@ -983,28 +979,20 @@ var $browser = {};
 	{
 		$browser[ key ] = rbrowser[key].test(ua);
 	});
-	
 	setTimeout(function ()
 	{
 	    $ready(function ()
 	    {
 			//For hack CSS selector
-	        if (document.querySelectorAll)
+	        if (document.querySelectorAll === undefined)
 	        {
-	            var selector_style = $new('style', {
-	                'id': 'Qatrix_selector',
-	                'type': "text/css"
-	            });
+	            var selector_style = $new('style');
 	            $append(document.body, selector_style);
 	            Qatrix.Qselector = selector_style;
 	        }
-
 			//For animation
 	        var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement,
-	            animation_style = $new('style', {
-	                'id': 'Qatrix_animation',
-	                'type': "text/css"
-	            });
+	            animation_style = $new('style');
 	        $append(head, animation_style);
 	        Qatrix.Qanimate = animation_style;
 	    });
