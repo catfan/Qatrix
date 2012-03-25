@@ -268,7 +268,8 @@ var Qatrix = {
 	    {
 	        return $attr.remove(elem, 'data-' + name);
 	    }
-	}, $cache = {
+	},
+	$cache = {
 	    data: {},
 	    get: function (key)
 	    {
@@ -300,7 +301,8 @@ var Qatrix = {
 	        $cache.data = {};
 	        return true;
 	    }
-	}, $event = {
+	},
+	$event = {
 	    add: function (elem, type, handler, check_attached)
 	    {
 	        if (check_attached == true)
@@ -402,7 +404,8 @@ var Qatrix = {
 	        }
 	        return false;
 	    }
-	}, $clear = function (timer)
+	},
+	$clear = function (timer)
 	{
 	    if (timer)
 	    {
@@ -410,7 +413,8 @@ var Qatrix = {
 	        clearInterval(timer);
 	    }
 	    return null;
-	}, $ready = function (callback)
+	},
+	$ready = function (callback)
 	{
 	    function checkDOM()
 	    {
@@ -431,7 +435,8 @@ var Qatrix = {
 	        }
 	    }
 	    checkDOM();
-	}, $css = {
+	},
+	$css = {
 	    get: function (elem, name)
 	    {
 	        return $style.get(elem, name);
@@ -666,12 +671,11 @@ var Qatrix = {
 		(function()
 		{
 			var elem_style = document.documentElement.style;
-			return 
-				elem_style.webkitTransition !== undefined ||
+			return ( elem_style.webkitTransition !== undefined ||
 				elem_style.MozTransition !== undefined ||
 				elem_style.OTransition !== undefined ||
 				elem_style.MsTransition !== undefined ||
-				elem_style.transition !== undefined;
+				elem_style.transition !== undefined );
 		}())
 	) ?
 	(function ()
@@ -716,7 +720,8 @@ var Qatrix = {
 
 		    AUID = 'Qatrix_animation_' + Math.random().toString().replace('0.', '');
 		    rule = '.' + AUID + '{' + transition_name + ':all ' + duration + 'ms;}';
-		    Qatrix.Qanimate.insertRule('.' + AUID, '{' + transition_name + ':all ' + duration + 'ms;}');
+			
+		    Qatrix.Qanimate.sheet.insertRule( '.' + AUID + '{' + transition_name + ':all ' + duration + 'ms;}', 0);
 		    setTimeout(function ()
 		    {
 		        $className.add(elem, AUID);
@@ -736,7 +741,7 @@ var Qatrix = {
 		    setTimeout(function ()
 		    {
 		        $className.remove(elem, AUID);
-		        Qatrix.Qanimate.textContent = Qatrix.Qanimate.textContent.replace(rule, '');
+		        Qatrix.Qanimate.sheet.textContent = Qatrix.Qanimate.textContent.replace(rule, '');
 		        if (callback)
 		        {
 		            callback();
@@ -1003,5 +1008,5 @@ var $browser = {};
 	        $append(head, animation_style);
 	        Qatrix.Qanimate = animation_style;
 	    });
-	}, 1);
+	}, 10);
 })();
