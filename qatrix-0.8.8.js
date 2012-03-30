@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v0.8.7
+	Qatrix JavaScript v0.8.8
 
 	Copyright (c) 2012, The Qatrix project, Angel Lai
 	The Qatrix project is under MIT license.
@@ -7,7 +7,7 @@
 */
 
 var Qatrix = {
-		version: '0.8.7',
+		version: '0.8.8',
 		
 		rtrim: /(^\s*)|(\s*$)/g,
 		rcamelCase: /-([a-z])/ig,
@@ -33,6 +33,7 @@ var Qatrix = {
 			        fragment.appendChild(div.childNodes[0]);
 			    }
 			    node = fragment;
+				
 			    //Release  memory
 			    div = null;
 			}
@@ -48,6 +49,8 @@ var Qatrix = {
 	//Compatible for other $ based libraries
 	$ = ( $ === undefined ) ? function (id)
 	{
+		//Qatrix just returns getElementById directly without additional process for highest performance.
+		//For more complex manipulation, use $id.
 		return document.getElementById(id);
 	}:
 	$,
@@ -71,11 +74,20 @@ var Qatrix = {
 		    }
 		}
 	},
-	$id = function (ids, callback)
+	$id = function (id, callback)
 	{
 		var match = [],
 		    elem;
-		$each(ids, function (i, item)
+		if(typeof id === 'string')
+		{
+			elem = $(id);
+			if(elem != null && callback)
+			{
+				callback(elem);
+			}
+			return elem;
+		}
+		$each(id, function (i, item)
 		{
 		    elem = $(item);
 		    if (elem != null)
@@ -245,7 +257,14 @@ var Qatrix = {
 	    get: function (elem, name)
 	    {
 	        var value = $attr.get(elem, 'data-' + name);
-	        return (value === true) ? true : (value === false) ? false : (value === null) ? null : (Qatrix.rdigit.test(value)) ? parseInt(value) : ($json.isJSON(value)) ? $json.decode(value) : value;
+	        return value === "true" ? true : 
+						value === "false" ? false : 
+						value === "null" ? '' :
+						value === null ? '' :
+						value === '' ? '' :
+						Qatrix.rdigit.test(value) ? parseInt(value) :
+						$json.isJSON(value) ? $json.decode(value) :
+						value;
 	    },
 	    set: function (elem, name, value)
 	    {
@@ -416,6 +435,7 @@ var Qatrix = {
 	{
 	    function checkDOM()
 	    {
+			//Hack DOM for ready event.
 	        try
 	        {
 	            window.scrollTo(0, 0);
@@ -692,6 +712,7 @@ var Qatrix = {
 		        property_camelCase = [],
 		        unit = [],
 		        css, translate3d, AUID, rule;
+			duration = (duration) ? duration : '500';
 		    for (css in properties)
 		    {
 		        property_camelCase[css] = $string.camelCase(css);
@@ -710,7 +731,7 @@ var Qatrix = {
 		        property_name.push(css);
 		    }
 
-		    //Using CSS3 transform function will enable to use hardware acceleration to handle.
+		    //Using CSS3 transform function will enable to use hardware acceleration to handle this animation.
 		    if (properties['left'] || properties['top'])
 		    {
 		        property_name.push(prefix_name + 'transform');
@@ -762,6 +783,7 @@ var Qatrix = {
 		    property_to_value = [],
 		    property_camelCase = [],
 		    from_value, style_value;
+		duration = (duration) ? duration : '500';
 		for (css in properties)
 		{
 		    property_camelCase[css] = $string.camelCase(css);
@@ -809,25 +831,25 @@ var Qatrix = {
 
 		return elem;
 	},
-	$fadeout = function(elem, dur, callback)
+	$fadeout = function(elem, duration, callback)
 	{
-		dur = (dur) ? dur : '500';
-		$animate(elem, {
+		duration = (duration) ? duration : '500';
+		return $animate(elem, {
 		    'opacity': {
 		        from: 1,
 		        to: 0
 		    }
-		}, dur, callback);
+		}, duration, callback);
 	},
-	$fadein = function (elem, dur, callback)
+	$fadein = function (elem, duration, callback)
 	{
-		dur = (dur) ? dur : '500';
-		$animate(elem, {
+		duration = (duration) ? duration : '500';
+		return $animate(elem, {
 			'opacity': {
 				from: 0,
 				to: 1
 			}
-		}, dur, callback);
+		}, duration, callback);
 	},
 	$cookie = {
 		get: function (key)
@@ -861,7 +883,7 @@ var Qatrix = {
 		{
 		    $each(arguments, function (i, key)
 		    {
-		        $cookie.set(key, '', -360);
+		        $cookie.set(key, '', -1);
 		    });
 		}
 	},
@@ -877,9 +899,16 @@ var Qatrix = {
 		},
 		isJSON: function (string)
 		{
-			return Qatrix.rvalidchars.test( string.replace( Qatrix.rvalidescape, '@' )
-						.replace( Qatrix.rvalidtokens, ']' )
-						.replace( Qatrix.rvalidbraces, ''));
+			if(typeof string === 'string' && string !== '')
+			{
+				return Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@')
+							.replace(Qatrix.rvalidtokens, ']')
+							.replace(Qatrix.rvalidbraces, ''));
+			}
+			else
+			{
+				return false;
+			}
 		}
 	},
 	$ajax = function (url, options)
