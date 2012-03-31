@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v0.8.8
+	Qatrix JavaScript v0.8.9
 
 	Copyright (c) 2012, The Qatrix project, Angel Lai
 	The Qatrix project is under MIT license.
@@ -7,7 +7,7 @@
 */
 
 var Qatrix = {
-		version: '0.8.8',
+		version: '0.8.9',
 		
 		rtrim: /(^\s*)|(\s*$)/g,
 		rcamelCase: /-([a-z])/ig,
@@ -433,26 +433,25 @@ var Qatrix = {
 	},
 	$ready = function (callback)
 	{
-	    function checkDOM()
+		if (document.readyState === 'complete')
+		{
+			return setTimeout(callback, 1);
+		}
+		//Hack IE DOM for ready event.
+	    function domready()
 	    {
-			//Hack DOM for ready event.
 	        try
 	        {
-	            window.scrollTo(0, 0);
+	            document.documentElement.doScroll('left');
 	            callback();
 	        }
 	        catch (e)
 	        {
-	            var checkTimer = setTimeout(checkDOM, 0);
+				setTimeout(domready, 1);
 	            return;
 	        }
-	        finally
-	        {
-	            $clear(checkTimer);
-	            return true;
-	        }
 	    }
-	    checkDOM();
+	    domready();
 	},
 	$css = {
 	    get: function (elem, name)
@@ -657,6 +656,21 @@ var Qatrix = {
 	        elem.className = name;
 	        return elem;
 	    },
+		has: function (elem, name)
+		{
+			var className = elem.className,
+				haystack = name.split(" "),
+				i = 0,
+				l = haystack.length;
+			for( ; i < l ; ++i )
+			{
+				if( className.indexOf( " " + haystack[i] + " " ) > -1 || className.indexOf( haystack[i] + " " ) > -1 || className.indexOf( " " + haystack[i] ) > -1 || className == haystack[i] )
+				{
+					return true;
+				}
+			}
+			return false;
+		},
 	    remove: function (elem, name)
 	    {
 	        elem.className = (name) ? $string.trim(elem.className.replace(name, '').split(/\s+/).join(' ')) : '';
