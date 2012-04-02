@@ -1022,22 +1022,14 @@ var $browser = {};
 	{
 		$browser[ key ] = rbrowser[key].test(ua);
 	});
-	setTimeout(function ()
+	//For hack CSS selector
+	if (document.querySelectorAll === undefined)
 	{
-	    $ready(function ()
-	    {
-			//For hack CSS selector
-	        if (document.querySelectorAll === undefined)
-	        {
-	            var selector_style = $new('style');
-	            $append(document.body, selector_style);
-	            Qatrix.Qselector = selector_style;
-	        }
-			//For animation
-	        var head = document.head || document.getElementsByTagName('head')[0] || document.documentElement,
-	            animation_style = $new('style');
-	        $append(head, animation_style);
-	        Qatrix.Qanimate = animation_style;
-	    });
-	}, 10);
+		$ready(function()
+		{
+			Qatrix.Qselector = $append(document.body, $new('style'));
+		});
+	}
+	//For animation
+	Qatrix.Qanimate = $append( document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('style'));
 })();
