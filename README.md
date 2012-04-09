@@ -25,7 +25,7 @@ Only 5KB compressed and gzipped file size with 60+ functions, including DOM, AJA
 
 License
 --------
-MIT license.
+The Qatrix JavaScript is under MIT license. You can freely to use or distribute for your project as long as declaring the original copyright information.
 
 Compatibility
 --------------
@@ -35,6 +35,9 @@ Links
 ------
 
 Official website: [http://qatrix.com](http://qatrix.com)
+
 Documentation: [http://qatrix.com/doc](http://qatrix.com/doc)
+
 Benchmark: [http://qatrix.com/benchmark](http://qatrix.com/benchmark)
+
 Download: [http://qatrix.com/download](http://qatrix.com/download)
