@@ -3,16 +3,20 @@
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
-    For details, see the Qatrix web site: http://qatrix.com
+    For details, see the Qatrix website: http://qatrix.com
 */
 
 var Qatrix = {
 		version: '0.9',
 
-		rtrim: /(^\s*)|(\s*$)/g,
+		rbline: /\n+/g,
+		rbrace: /^(?:\{.*\}|\[.*\])$/,
 		rcamelCase: /-([a-z])/ig,
 		rdigit: /\d/,
+		rline: /\r\n/g,
 		rnum: /[0-9\.]/ig,
+		rspace: /\s+/,
+		rtrim: /(^\s*)|(\s*$)/g,
 		rvalidchars: /^[\],:{}\s]*$/,
 		rvalidescape: /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
 		rvalidtokens: /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
@@ -23,7 +27,7 @@ var Qatrix = {
 			var type = typeof node;
 			if (type === 'string')
 			{
-				var doc = (elem && elem.ownerDocument) ? elem.ownerDocument : document,
+				var doc = elem && elem.ownerDocument || document,
 					fragment = doc.createDocumentFragment(),
 					div = document.createElement("div"),
 					ret = [];
@@ -48,7 +52,7 @@ var Qatrix = {
 		}
 	},
 	//Compatible for other $ based libraries
-	$ = ($ === undefined) ?
+	$ = $ === undefined ?
 	function (id)
 	{
 		//Qatrix just returns getElementById directly without additional process for highest performance.
@@ -62,7 +66,7 @@ var Qatrix = {
 			name;
 		if (length)
 		{
-			for (; i < length; ++i)
+			for (; i < length; i++)
 			{
 				callback.call(haystack[i], i, haystack[i]);
 			}
@@ -104,6 +108,19 @@ var Qatrix = {
 			});
 		}
 		return match;
+	},
+	$dom = function (dom, callback)
+	{
+		if (callback)
+		{
+			dom.length ?
+			$each(dom, function(i, item)
+			{
+				callback(item);
+			}) :
+			callback(item);
+		}
+		return dom;
 	},
 	$tag = function (elem, name, callback)
 	{
@@ -192,31 +209,44 @@ var Qatrix = {
 		var elem = document.createElement(tag);
 		if (properties)
 		{
-			$each(properties, function (name, property)
-			{
-				switch (name)
+			try {
+				$each(properties, function (name, property)
 				{
-				case 'css':
-				case 'style':
-					$each(property[name], function (css, value)
+					switch (name)
 					{
-						$style.set(elem, css, value);
-					});
-					break;
+					case 'css':
+					case 'style':
+						$each(property[name], function (css, value)
+						{
+							$style.set(elem, css, value);
+						});
+						break;
 
-				case 'innerHTML':
-				case 'html':
-					$html(elem, property);
-					break;
+					case 'innerHTML':
+					case 'html':
+						$html(elem, property);
+						break;
 
-				case 'text':
-					$text(elem, property);
-					break;
-				default:
-					elem[name] = properties[name];
-					break;
-				}
-			});
+					case 'className':
+					case 'class':
+						$className.set(elem, property);
+						break;
+
+					case 'text':
+						$text(elem, property);
+						break;
+
+					default:
+						$attr.set(elem, name, property);
+						break;
+					}
+				});
+				return elem;
+			} catch (e) {}
+			finally {
+				//Prevent memory leak.
+				elem = null;
+			}
 		}
 		return elem;
 	},
@@ -236,7 +266,7 @@ var Qatrix = {
 			}
 			return string;
 		},
-		trim: (String.prototype.trim) ?
+		trim: String.prototype.trim ?
 		function (string)
 		{
 			return string.trim();
@@ -264,21 +294,23 @@ var Qatrix = {
 		get: function (elem, name)
 		{
 			var value = $attr.get(elem, 'data-' + name);
-			return value === "true" ? true : value === "false" ? false : value === "null" ? '' : value === null ? '' : value === '' ? '' : Qatrix.rdigit.test(value) ? parseInt(value) : $json.isJSON(value) ? $json.decode(value) : value;
+			return value === "true" ? true :
+						value === "false" ? false :
+						value === "null" ? '' :
+						value === null ? '' :
+						value === '' ? '' :
+						!isNaN( parseFloat(value) ) && isFinite(value) ? +value :
+						Qatrix.rbrace.test(value) ? $json.decode(value) :
+						value;
 		},
 		set: function (elem, name, value)
 		{
-			if (typeof name === 'object')
+			typeof name === 'object' ?
+			$each(name, function (key, value)
 			{
-				$each(name, function (key, value)
-				{
-					$attr.set(elem, 'data-' + key, value);
-				});
-			}
-			else
-			{
-				$attr.set(elem, 'data-' + name, value);
-			}
+				$attr.set(elem, 'data-' + key, value);
+			}) :
+			$attr.set(elem, 'data-' + name, value);
 			return elem;
 		},
 		remove: function (elem, name)
@@ -291,7 +323,7 @@ var Qatrix = {
 		get: function (key)
 		{
 			var data = $cache.data[key];
-			return (data || typeof data === 'number') ? data : null;
+			return data || typeof data === 'number' ? data : null;
 		},
 		set: function (key, value)
 		{
@@ -301,12 +333,12 @@ var Qatrix = {
 		inc: function (key)
 		{
 			var data = $cache.data[key];
-			return (typeof data === 'number') ? $cache.data[key]++ : data;
+			return typeof data === 'number' ? $cache.data[key]++ : data;
 		},
 		dec: function (key)
 		{
 			var data = $cache.data[key];
-			return (typeof data === 'number') ? $cache.data[key]-- : data;
+			return typeof data === 'number' ? $cache.data[key]-- : data;
 		},
 		remove: function (key)
 		{
@@ -322,40 +354,44 @@ var Qatrix = {
 	$event = {
 		add: function (elem, type, handler)
 		{
-			// if (check_attached == true)
-			// {
-				// if ($data.get(elem, 'event-' + type))
-				// {
-					// return false;
-				// }
-			// }
-			//$data.set(elem, 'event-' + type, true);
+			if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
+			{
+				return false;
+			}
+
 			if (type === 'mouseenter' || type === 'mouseleave')
 			{
-				type = (type === 'mouseenter') ? 'mouseover' : 'mouseout';
-				handle = $event.handler.mouseenter(handler);
+				type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
+				handler = $event.handler.mouseenter(handler);
 			}
+
 			if (elem.addEventListener)
 			{
 				elem.addEventListener(type, handler, false);
 			}
-			else if (elem.attachEvent)
+			else
 			{
+				//Prevent attaching duplicate event with same event type and same handler for IE8-6
+				var handlerName = handler.toString();
+				if ($data.get(elem, 'event-' + type + '-' + handlerName))
+				{
+					return false;
+				}
+				$data.set(elem, 'event-' + type + '-' + handlerName, true);
+
 				elem.attachEvent('on' + type, handler);
 			}
 			return elem;
 		},
-		remove: function (elem, type, handler)
+		remove: document.removeEventListener ?
+		function (elem, type, handler)
 		{
-			if (elem.removeEventListener)
-			{
-				elem.removeEventListener(type, handler, false);
-			}
-			else if (elem.detachEvent)
-			{
-				elem.detachEvent('on' + type, handler);
-			}
-			//$data.remove(elem, 'event-' + type);
+			elem.removeEventListener(type, handler, false);
+			return elem;
+		} :
+		function (elem, type, handler)
+		{
+			elem.detachEvent('on' + type, handler);
 			return elem;
 		},
 		handler: {
@@ -386,40 +422,17 @@ var Qatrix = {
 		},
 		key: function (event)
 		{
-			if (event.which == null && (event.charCode != null || event.keyCode != null))
-			{
-				event.which = event.charCode != null ? event.charCode : event.keyCode;
-			}
-			return event.which;
+			return event.which ? event.which :
+				event.charCode ? event.charCode :
+				event.keyCode;
 		},
 		metaKey: function (event)
 		{
-			return (!event.metaKey && event.ctrlKey) ? event.ctrlKey : event.metaKey;
+			return !event.metaKey && event.ctrlKey ? event.ctrlKey : event.metaKey;
 		},
 		target: function (event)
 		{
-			if (!event.target)
-			{
-				event.target = event.srcElement || document;
-			}
-			return event.target;
-		},
-		mouseOver: function (event, originElement)
-		{
-			if (!event.relatedTarget && event.fromElement)
-			{
-				event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
-			}
-			var parent = event.relatedTarget;
-			while (parent && parent !== originElement)
-			{
-				parent = parent.parentNode;
-			}
-			if (parent !== originElement)
-			{
-				return true;
-			}
-			return false;
+			return event.target ? event.target : event.srcElement || document;
 		}
 	},
 	$clear = function (timer)
@@ -438,9 +451,9 @@ var Qatrix = {
 			return setTimeout(callback, 1);
 		}
 		
-		if( document.addEventListener )
+		if(document.addEventListener)
 		{
-			document.addEventListener( "DOMContentLoaded", callback, false );
+			document.addEventListener( 'DOMContentLoaded', callback, false );
 			return;
 		}
 		
@@ -467,23 +480,19 @@ var Qatrix = {
 		},
 		set: function (elem, name, value)
 		{
-			if (typeof name === 'object')
+			typeof name === 'object' ?
+			$each(name, function (propertyName, value)
 			{
-				$each(name, function (propertyName, value)
-				{
-					$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
-				});
-			}
-			else
-			{
-				$style.set(elem, $string.camelCase(name), $css.fix(name, value));
-			}
+				$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
+			}) :
+			$style.set(elem, $string.camelCase(name), $css.fix(name, value));
 			return elem;
 		},
 		number: {
 			'fontWeight': true,
 			'lineHeight': true,
-			'opacity': true
+			'opacity': true,
+			"zIndex": true
 		},
 		unit: function (name, value)
 		{
@@ -492,20 +501,15 @@ var Qatrix = {
 				return '';
 			}
 			var unit = value.toString().replace(Qatrix.rnum, '');
-			return (unit === '') ? 'px' : unit;
+			return unit === '' ? 'px' : unit;
 		},
 		fix: function (name, value)
 		{
-			var type = typeof value;
-			if (type === 'number' && !$css.number[name])
+			if (typeof value === 'number' && !$css.number[name])
 			{
 				value += 'px';
 			}
-			if (value == null && isNaN(value))
-			{
-				return false;
-			}
-			return value;
+			return value == null && isNaN(value) ? false : value;
 		}
 	},
 	$style = {
@@ -516,6 +520,7 @@ var Qatrix = {
 			{
 				return document.defaultView.getComputedStyle(elem, null).getPropertyValue(property);
 			}
+			return false;
 		} :
 		function (elem, property)
 		{
@@ -531,11 +536,13 @@ var Qatrix = {
 				}
 				return elem.currentStyle[$string.camelCase(property)];
 			}
+			return false;
 		},
 		set: document.documentElement.style.opacity !== undefined ?
 		function (elem, name, value)
 		{
 			elem.style[name] = value;
+			return true;
 		} :
 		function (elem, name, value)
 		{
@@ -551,6 +558,7 @@ var Qatrix = {
 			{
 				elem.style[name] = value;
 			}
+			return true;
 		}
 	},
 	$pos = function (elem, x, y)
@@ -586,7 +594,7 @@ var Qatrix = {
 	},
 	$prepend = function (elem, node)
 	{
-		return (elem.firstChild) ? elem.insertBefore(Qatrix.nodeManip(elem, node), elem.firstChild) : elem.appendChild(Qatrix.nodeManip(elem, node));
+		return elem.firstChild ? elem.insertBefore(Qatrix.nodeManip(elem, node), elem.firstChild) : elem.appendChild(Qatrix.nodeManip(elem, node));
 	},
 	$before = function (elem, node)
 	{
@@ -594,15 +602,11 @@ var Qatrix = {
 	},
 	$after = function (elem, node)
 	{
-		return (elem.nextSibling) ? elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(Qatrix.nodeManip(elem, node));
+		return elem.nextSibling ? elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(Qatrix.nodeManip(elem, node));
 	},
 	$remove = function (elem)
 	{
-		if (elem != null && elem.parentNode)
-		{
-			elem.parentNode.removeChild(elem);
-		}
-		return elem;
+		return elem != null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 	},
 	$empty = function (elem)
 	{
@@ -613,6 +617,10 @@ var Qatrix = {
 	},
 	$html = function (elem, html)
 	{
+		if (!html)
+		{
+			return elem.nodeType === 1 ? elem.innerHTML : null;
+		}
 		try
 		{
 			elem.innerHTML = html;
@@ -625,6 +633,29 @@ var Qatrix = {
 	},
 	$text = function (elem, text)
 	{
+		//Retrieve the text value.
+		//textContent and innerText returns different results from different browser
+		//So it have to rewrite the process method
+		if (!text)
+		{
+			var rtext = '',
+				textContent = (elem.textContent),
+				nodeType;
+			for (elem = elem.firstChild; elem; elem = elem.nextSibling)
+			{
+				nodeType = elem.nodeType;
+				if (nodeType === 3 && $string.trim(elem.nodeValue) != '')
+				{
+					rtext += elem.nodeValue.replace(Qatrix.rbline, '') + "\n";
+				}
+				if (nodeType === 1 || nodeType === 2)
+				{
+					rtext += (textContent ? $string.trim(elem.textContent.replace(Qatrix.rbline, '')) : elem.innerText.replace(Qatrix.rline, '')) + "\n";
+				}
+			}
+			return rtext;
+		}
+		//Set text node.
 		$empty(elem);
 		elem.appendChild(document.createTextNode(text));
 		return elem;
@@ -638,23 +669,16 @@ var Qatrix = {
 			}
 			else
 			{
-				if (elem.className !== name)
+				var ori = elem.className,
+					nclass = [];
+				$each(name.split(Qatrix.rspace), function(i, item)
 				{
-					var haystack = elem.className.split(/\s+/),
-						match;
-					$each(haystack, function (i, item)
+					if (!new RegExp('\\b(' + item + ')\\b').test(ori))
 					{
-						if (item === name)
-						{
-							match = true;
-						}
-					});
-					if (!match)
-					{
-						haystack.push(name);
-						elem.className = haystack.join(' ');
+						nclass.push( ' ' + item);
 					}
-				}
+				});
+				elem.className += nclass.join('');
 			}
 			return elem;
 		},
@@ -665,11 +689,11 @@ var Qatrix = {
 		},
 		has: function (elem, name)
 		{
-			return new RegExp('\\b(' + name.split(' ').join('|') + ')\\b').test(elem.className);
+			return new RegExp('\\b(' + name.split(Qatrix.rspace).join('|') + ')\\b').test(elem.className);
 		},
 		remove: function (elem, name)
 		{
-			elem.className = (name) ? $string.trim(elem.className.replace(name, '').split(/\s+/).join(' ')) : '';
+			elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(Qatrix.rspace).join('|') + ')\\b', 'g'), '').split(Qatrix.rspace).join(' ')) : '';
 			return elem;
 		}
 	},
@@ -677,7 +701,8 @@ var Qatrix = {
 	{
 		$each(arguments, function (i, argument)
 		{
-			(typeof argument === 'string') ? $(argument).style.display = 'none' : (typeof argument === 'object' && argument.length) ? $each(argument, function (i, elem)
+			typeof argument === 'string' ? $(argument).style.display = 'none' :
+			typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
 			{
 				elem.style.display = 'none';
 			}) : argument.style.display = 'none';
@@ -687,7 +712,8 @@ var Qatrix = {
 	{
 		$each(arguments, function (i, argument)
 		{
-			(typeof argument === 'string') ? $(argument).style.display = 'block' : (typeof argument === 'object' && argument.length) ? $each(argument, function (i, elem)
+			typeof argument === 'string' ? $(argument).style.display = 'block' :
+			typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
 			{
 				elem.style.display = 'block';
 			}) : argument.style.display = 'block';
@@ -696,156 +722,169 @@ var Qatrix = {
 	$animate = (function ()
 	{
 		//Use CSS3 native transition for animation as possible.
-		var elem_style = document.documentElement.style;
+		var style = document.documentElement.style;
 		return (
-			elem_style.webkitTransition !== undefined ||
-			elem_style.MozTransition !== undefined ||
-			elem_style.OTransition !== undefined ||
-			elem_style.MsTransition !== undefined ||
-			elem_style.transition !== undefined
+			style.webkitTransition === '' ||
+			style.MozTransition === '' ||
+			style.OTransition === '' ||
+			style.MsTransition === '' ||
+			style.transition === ''
 		);
 	}()) ? (function ()
 	{
-		var elem_style = document.documentElement.style,
-			prefix_name =
-				(elem_style.webkitTransition !== undefined) ? '-webkit-' :
-				(elem_style.MozTransition !== undefined) ? '-moz-' :
-				(elem_style.OTransition !== undefined) ? '-o-' :
-				(elem_style.MsTransition !== undefined) ? '-ms-' : '';
-		transition_name = prefix_name + 'transition';
+		var style = document.documentElement.style,
+			prefix_name = style.webkitTransition === '' ? 'Webkit' :
+									style.MozTransition === '' ? 'Moz' :
+									style.OTransition === '' ? 'O' :
+									style.MsTransition === '' ? 'ms' : '',
+			transition_name = prefix_name + 'Transition';
+			transform_name = prefix_name + 'Transform';
 		return function (elem, properties, duration, callback)
 		{
-			var property_name = [],
-				property_to_value = [],
-				property_camelCase = [],
+			var css_value = [],
+				css_name = [],
 				unit = [],
-				css, translate3d, AUID, rule;
-			duration = (duration) ? duration : '500';
+				css_style = [],
+				style = elem.style,
+				css, offset;
+			duration = duration || '300';
 			for (css in properties)
 			{
-				property_camelCase[css] = $string.camelCase(css);
+				css_name[css] = $string.camelCase(css);
 				if (properties[css].from != null)
 				{
-					property_to_value[css] = (!$css.number[css]) ? parseInt(properties[css].to) : properties[css].to;
+					css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
 					unit[css] = $css.unit(css, properties[css].to);
-					$style.set(elem, property_camelCase[css], parseInt(properties[css].from) + unit[css]);
+					$style.set(elem, css_name[css], parseInt(properties[css].from) + unit[css]);
 				}
 				else
 				{
-					property_to_value[css] = (!$css.number[css]) ? parseInt(properties[css]) : properties[css];
+					css_value[css] = !$css.number[css] ? parseInt(properties[css]) : properties[css];
 					unit[css] = $css.unit(css, properties[css]);
-					$style.set(elem, property_camelCase[css], $style.get(elem, property_camelCase[css]));
+					$style.set(elem, css_name[css], $style.get(elem, css_name[css]));
 				}
-				property_name.push(css);
+				if (css === 'left' || css === 'top')
+				{
+					offset = $offset(elem);
+					$style.set(elem, css, (css === 'left' ? offset.left : offset.top) + 'px');
+				}
+				css_style.push(css);
 			}
 
-			//Using CSS3 transform function will enable to use hardware acceleration to handle this animation.
-			if (properties['left'] || properties['top'])
-			{
-				property_name.push(prefix_name + 'transform');
-			}
-
-			AUID = 'Qatrix_animation_' + Math.random().toString().replace('0.', '');
-			rule = '.' + AUID + '{' + transition_name + ':all ' + duration + 'ms;}';
-
-			Qatrix.Qanimate.sheet.insertRule('.' + AUID + '{' + transition_name + ':all ' + duration + 'ms;}', 0);
+			style[transition_name] = 'all ' + duration + 'ms';
 			setTimeout(function ()
 			{
-				$className.add(elem, AUID);
+				//Using CSS3 transform function will enable hardware acceleration to handle this animation.
 				if (properties['left'] || properties['top'])
 				{
-					var transform = $string.camelCase(prefix_name + 'transform'),
-						offset = $offset(elem);
-					translate3d = (properties['left'] && properties['top']) ? 'translate3d(' + (property_to_value['left'] - offset.left) + unit['left'] + ',' + (property_to_value['top'] - offset.top) + unit['top'] + ',0)' :
-											(properties['left']) ? 'translate3d(' + (property_to_value['left'] - offset.left) + unit['left'] + ',0,0)' :
-											'translate3d(0,' + (property_to_value['top'] - offset.top) + unit['top'] + ',0)';
-					$style.set(elem, transform, translate3d);
-					$style.set(elem, transform, '');
+					style[transform_name] = 'translateZ(0)';
 				}
-				for (css in properties)
+				$each(css_style, function (i, css)
 				{
-					$style.set(elem, property_camelCase[css], property_to_value[css] + unit[css]);
-				}
-			}, 50);
+					style[css_name[css]] = css_value[css] + unit[css];
+				});
+			}, 1);
 
 			//Animation completed
 			setTimeout(function ()
 			{
-				$className.remove(elem, AUID);
-				Qatrix.Qanimate.sheet.textContent = Qatrix.Qanimate.textContent.replace(rule, '');
+				//Clear up CSS transition property
+				style[transition_name] = style[transform_name] = '';
 				if (callback)
 				{
-					callback();
+					callback(elem);
 				}
 			}, duration);
-			
+
 			return elem;
 		}
 	})() :
 	function (elem, properties, duration, callback)
 	{
-		var $timer = [],
-			$step = 0,
+		var step = 0,
 			p = 30,
-			ori = [],
-			diff = [],
-			unit = [],
 			i = 0,
-			css, property_name = [],
-			property_to_value = [],
-			property_camelCase = [],
-			from_value, style_value;
-		duration = (duration) ? duration : '500';
+			j = 0,
+			length = 0,
+			css,
+			css_to_value = [],
+			css_from_value = [],
+			css_name = [],
+			css_unit = [],
+			css_style = [],
+			property_value,
+			offset,
+			timer;
+		duration = duration || '300';
+				
 		for (css in properties)
 		{
-			property_camelCase[css] = $string.camelCase(css);
+			css_name.push($string.camelCase(css));
+			
 			if (properties[css].from != null)
 			{
-				property_to_value[css] = (!$css.number[css]) ? parseInt(properties[css].to) : properties[css].to;
-				unit[css] = $css.unit(css, properties[css].to);
-				from_value = (!$css.number[css]) ? parseInt(properties[css].from) : properties[css].from;
-				$style.set(elem, property_camelCase[css], from_value + unit[css]);
-				diff[css] = (property_to_value[css] - from_value) / p;
-				ori[css] = from_value;
+				property_value = properties[css].to;
+				css_from_value.push( !$css.number[css] ? parseInt(properties[css].from) : properties[css].from );
+				$style.set(elem, css_name[i], css_from_value[i] + css_unit[i]);
 			}
 			else
 			{
-				style_value = parseInt($style.get(elem, property_camelCase[css]));
-				property_to_value[css] = (!$css.number[css]) ? parseInt(properties[css]) : properties[css];
-				unit[css] = $css.unit(css, properties[css]);
-				$style.set(elem, property_camelCase[css], $style.get(elem, property_camelCase[css]));
-				diff[css] = (property_to_value[css] - style_value) / p;
-				ori[css] = style_value;
+				property_value = properties[css];
+
+				//Speical handle for left and top
+				if( css === 'left' || css === 'top' )
+				{
+					offset = $offset(elem);
+					css_from_value.push( css === 'left' ? offset.left : offset.top );
+				}
+				else
+				{
+					css_from_value.push( parseInt($style.get(elem, $string.camelCase(css))) );
+				}
+			}
+			css_to_value.push( !$css.number[css] ? parseInt(property_value) : property_value );
+			css_unit.push( $css.unit(css, property_value) );
+			i++;
+			length++;
+		}
+		for(j = 0; j < p ; j++)
+		{
+			css_style[j] = [];
+			for(i = 0; i < length ; i++)
+			{
+				css_style[j][css_name[i]] = ( css_from_value[i] + ( css_to_value[i] - css_from_value[i] ) / p * j  ) + css_unit[i];
 			}
 		}
-		for (; i < p; ++i)
+		
+		function update()
 		{
-			$timer[i] = setTimeout(function ()
+			for(i = 0; i < length ; i++)
 			{
-				for (css in properties)
-				{
-					$style.set(elem, property_camelCase[css], (ori[css] + (diff[css] * $step)) + unit[css]);
-				}
-				$step++;
-			}, (duration / p) * i);
+				elem.style[css_name[i]] = css_style[step][css_name[i]];
+			}
+			step++;
 		}
-		$timer[p] = setTimeout(function ()
+		
+		for (; i < p; i++)
 		{
-			for (css in properties)
+			timer = setTimeout(update, (duration / p) * i);
+		}
+		setTimeout(function ()
+		{
+			for(i = 0; i < length ; i++)
 			{
-				$style.set(elem, property_camelCase[css], property_to_value[css] + unit[css]);
+				$style.set(elem, css_name[i], css_to_value[i] + css_unit[i]);
 			}
 			if (callback)
 			{
-				callback();
+				callback(elem);
 			}
 		}, duration);
-
 		return elem;
 	},
 	$fadeout = function (elem, duration, callback)
 	{
-		duration = (duration) ? duration : '500';
+		duration = duration || '500';
 		return $animate(elem, {
 			'opacity': {
 				from: 1,
@@ -855,7 +894,7 @@ var Qatrix = {
 	},
 	$fadein = function (elem, duration, callback)
 	{
-		duration = (duration) ? duration : '500';
+		duration = duration || '500';
 		return $animate(elem, {
 			'opacity': {
 				from: 0,
@@ -878,6 +917,7 @@ var Qatrix = {
 					return decodeURIComponent(temp[1]);
 				}
 			}
+			return null;
 		},
 		set: function (key, value, expires)
 		{
@@ -889,7 +929,7 @@ var Qatrix = {
 				expires = expires * 86400000;
 			}
 			expires_date = new Date(today.getTime() + (expires));
-			document.cookie = key + '=' + encodeURIComponent(value) + ((expires) ? ';expires=' + expires_date.toGMTString() : '') + '; path=/';
+			return document.cookie = key + '=' + encodeURIComponent(value) + ((expires) ? ';expires=' + expires_date.toGMTString() : '') + '; path=/';
 		},
 		remove: function ()
 		{
@@ -897,35 +937,22 @@ var Qatrix = {
 			{
 				$cookie.set(key, '', -1);
 			});
+			return true;
 		}
 	},
 	$json = {
 		decode: window.JSON && window.JSON.parse ?
 		function (data)
 		{
-			return JSON.parse(data);
+			return JSON.parse($string.trim(data));
 		} :
 		function (data)
 		{
-			if ($json.isJSON(data))
-			{
-				return eval('(' + data + ')');
-			}
-			else
-			{
-				return false;
-			}
+			return $json.isJSON(data) ? eval('(' + $string.trim(data) + ')') : false;
 		},
 		isJSON: function (string)
 		{
-			if (typeof string === 'string' && string !== '')
-			{
-				return Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, ''));
-			}
-			else
-			{
-				return false;
-			}
+			return typeof string === 'string' && string !== '' ? Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, '')) : false;
 		}
 	},
 	$ajax = function (url, options)
@@ -936,16 +963,15 @@ var Qatrix = {
 			url = undefined;
 		}
 		options = options || {};
-		var request = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
+		var request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
-			type = (options.type !== undefined) ? options.type : 'POST',
+			type = options.type || 'POST',
 			response, url;
 		if (request)
 		{
-			url = (url) ? url : options.url;
+			url = url || options.url;
 			request.open(type, url, true);
 			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-
 			if (options.header !== undefined)
 			{
 				$each(options.header, function (key, value)
@@ -953,7 +979,6 @@ var Qatrix = {
 					request.setRequestHeader(key, value);
 				});
 			}
-
 			if (options.data !== undefined)
 			{
 				$each(options.data, function (key, value)
@@ -961,31 +986,21 @@ var Qatrix = {
 					param.push($url(key) + '=' + $url(value));
 				});
 			}
-
 			request.send(param.join('&').replace(/%20/g, '+'));
 			request.onreadystatechange = function ()
 			{
-				if (request.readyState == 4 && request.status == 200)
+				if (request.readyState == 4 && request.status == 200 && options.success !== undefined)
 				{
-					if (options.success !== undefined)
-					{
-						response = request.responseText;
-						if (response != '' && $json.isJSON(response))
-						{
-							options.success($json.decode(response));
-						}
-						else
-						{
-							options.success(response);
-						}
-					}
+					response = request.responseText;
+					options.success( response != '' && $json.isJSON(response) ? $json.decode(response) : response );
 				}
 			};
 		}
 	},
 	$loadscript = function (src)
 	{
-		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
+		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement,
+		$new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
@@ -1000,9 +1015,9 @@ var Qatrix = {
 		return Math.floor(Math.random() * (max - min + 1) + min);
 	};
 
-var $browser = {};
 (function ()
 {
+	$browser = {};
 	var ua = navigator.userAgent.toLowerCase(),
 		rbrowser = {
 			msie: /msie/,
@@ -1031,6 +1046,4 @@ var $browser = {};
 			Qatrix.Qselector = $append(document.body, $new('style'));
 		});
 	}
-	//For animation
-	Qatrix.Qanimate = $append(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('style'));
 })();
