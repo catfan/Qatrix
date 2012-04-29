@@ -1032,7 +1032,7 @@ var Qatrix = {
 									$each(value, function (i, item)
 									{
 										rdata.push( ( typeof item === 'string'  ? '"' + $string.slashes( item ) + '"' : item ) );
-									})
+									});
 									return rdata.join(',');
 								})() + ']' :
 								// For Object
