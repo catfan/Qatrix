@@ -1,65 +1,64 @@
 /*
-    Qatrix JavaScript v0.9.1
+    Qatrix JavaScript v0.9.3
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
     For details, see the Qatrix website: http:// qatrix.com
 */
 
+(function () {
+
 var Qatrix = {
-		version: '0.9.1',
+	version: '0.9.3',
 
-		rbline: /\n+/g,
-		rbrace: /^(?:\{.*\}|\[.*\])$/,
-		rcamelCase: /-([a-z])/ig,
-		rdigit: /\d/,
-		rline: /\r\n/g,
-		rnum: /[0-9\.]/ig,
-		rspace: /\s+/,
-		rtrim: /(^\s*)|(\s*$)/g,
-		rvalidchars: /^[\],:{}\s]*$/,
-		rvalidescape: /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-		rvalidtokens: /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-		rvalidbraces: /(?:^|:|,)(?:\s*\[)+/g,
+	rbline: /\n+/g,
+	rbrace: /^(?:\{.*\}|\[.*\])$/,
+	rcamelCase: /-([a-z])/ig,
+	rdigit: /\d/,
+	rline: /\r\n/g,
+	rnum: /[0-9\.]/ig,
+	rspace: /\s+/,
+	rtrim: /(^\s*)|(\s*$)/g,
+	rvalidchars: /^[\],:{}\s]*$/,
+	rvalidescape: /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
+	rvalidtokens: /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+	rvalidbraces: /(?:^|:|,)(?:\s*\[)+/g,
 
-		nodeManip: function (elem, node)
+	nodeManip: function (elem, node)
+	{
+		var type = typeof node;
+		if (type === 'string')
 		{
-			var type = typeof node;
-			if (type === 'string')
+			var doc = elem && elem.ownerDocument || document,
+				fragment = doc.createDocumentFragment(),
+				div = document.createElement('div'),
+				ret = [];
+
+			div.innerHTML = node;
+			while (div.childNodes[0] != null)
 			{
-				var doc = elem && elem.ownerDocument || document,
-					fragment = doc.createDocumentFragment(),
-					div = document.createElement("div"),
-					ret = [];
-
-				div.innerHTML = node;
-				while (div.childNodes[0] != null)
-				{
-					fragment.appendChild(div.childNodes[0]);
-				}
-				node = fragment;
-
-				// Release  memory
-				div = null;
+				fragment.appendChild(div.childNodes[0]);
 			}
+			node = fragment;
 
-			if (type === 'number')
-			{
-				node += '';
-			}
-
-			return node;
+			// Release  memory
+			div = null;
 		}
+
+		if (type === 'number')
+		{
+			node += '';
+		}
+
+		return node;
 	},
-	// Compatible for other $ based libraries
-	$ = $ === undefined ?
-	function (id)
+	$: function (id)
 	{
 		// Qatrix just returns getElementById directly without additional process for highest performance
 		// For more complex manipulation, use $id
 		return document.getElementById(id);
-	} : $,
-	$each = function (haystack, callback)
+	},
+	$each: function (haystack, callback)
 	{
 		var i = 0,
 			length = haystack.length,
@@ -79,7 +78,7 @@ var Qatrix = {
 			}
 		}
 	},
-	$id = function (id, callback)
+	$id: function (id, callback)
 	{
 		var match = [],
 			elem;
@@ -109,20 +108,18 @@ var Qatrix = {
 		}
 		return match;
 	},
-	$dom = function (dom, callback)
+	$dom: function (dom, callback)
 	{
 		if (callback)
 		{
-			dom.length ?
-			$each(dom, function(i, item)
+			dom.length ? $each(dom, function (i, item)
 			{
 				callback(item);
-			}) :
-			callback(item);
+			}) : callback(item);
 		}
 		return dom;
 	},
-	$tag = function (elem, name, callback)
+	$tag: function (elem, name, callback)
 	{
 		var match = elem.getElementsByTagName(name);
 		if (callback && match.length > 0)
@@ -134,7 +131,7 @@ var Qatrix = {
 		}
 		return match;
 	},
-	$class = document.getElementsByClassName ?
+	$class: document.getElementsByClassName ?
 	function (elem, className, callback)
 	{
 		var match = elem.getElementsByClassName(className);
@@ -146,13 +143,12 @@ var Qatrix = {
 			});
 		}
 		return match;
-	} :
+	}:
 	function (elem, className, callback)
 	{
 		var match = [],
-			rclass = new RegExp('\\b' + className + '\\b'),
-			childs = elem.getElementsByTagName('*');
-		$each(childs, function (i, item)
+			rclass = new RegExp('\\b' + className + '\\b');
+		$tag(elem, '*', function (item)
 		{
 			if (rclass.test(item.className))
 			{
@@ -168,7 +164,7 @@ var Qatrix = {
 		}
 		return match;
 	},
-	$select = document.querySelectorAll ?
+	$select: document.querySelectorAll ?
 	function (selector, callback)
 	{
 		var match = document.querySelectorAll(selector);
@@ -204,7 +200,7 @@ var Qatrix = {
 		}
 		return match;
 	},
-	$new = function (tag, properties)
+	$new: function (tag, properties)
 	{
 		var elem = document.createElement(tag);
 		if (properties)
@@ -240,15 +236,18 @@ var Qatrix = {
 					}
 				});
 				return elem;
-			} catch (e) {}
-			finally {
+			}
+			catch (e)
+			{}
+			finally
+			{
 				// Prevent memory leak
 				elem = null;
 			}
 		}
 		return elem;
 	},
-	$string = {
+	$string: {
 		camelCase: function (string)
 		{
 			return string.replace('-ms-', 'ms-').replace(Qatrix.rcamelCase, function (match, letter)
@@ -272,20 +271,20 @@ var Qatrix = {
 				"\t": '\\t',
 				"\n": '\\n',
 				"\r": '\\r',
-				'"' : '\\"'
+				'"': '\\"'
 			});
 		},
 		trim: String.prototype.trim ?
 		function (string)
 		{
 			return string.trim();
-		} :
+		}:
 		function (string)
 		{
 			return string.replace(Qatrix.rtrim, '');
 		}
 	},
-	$attr = {
+	$attr: {
 		get: function (elem, name)
 		{
 			return elem.getAttribute(name);
@@ -299,27 +298,25 @@ var Qatrix = {
 			return elem.removeAttribute(name);
 		}
 	},
-	$data = {
+	$data: {
 		get: function (elem, name)
 		{
 			var value = $attr.get(elem, 'data-' + name);
 			return value === "true" ? true :
-				value === "false" ? false :
-				value === "null" ? '' :
-				value === null ? '' :
-				value === '' ? '' :
-				!isNaN( parseFloat(value) ) && isFinite(value) ? +value :
-				Qatrix.rbrace.test(value) ? $json.decode(value) :
-				value;
+						value === "false" ? false :
+						value === "null" ? '' :
+						value === null ? '' :
+						value === '' ? '' :
+						!isNaN(parseFloat(value)) && isFinite(value) ? +value :
+						Qatrix.rbrace.test(value) ? $json.decode(value) :
+						value;
 		},
 		set: function (elem, name, value)
 		{
-			typeof name === 'object' ?
-			$each(name, function (key, value)
+			typeof name === 'object' ? $each(name, function (key, value)
 			{
 				$attr.set(elem, 'data-' + key, value);
-			}) :
-			$attr.set(elem, 'data-' + name, value);
+			}) : $attr.set(elem, 'data-' + name, value);
 			return elem;
 		},
 		remove: function (elem, name)
@@ -327,7 +324,7 @@ var Qatrix = {
 			return $attr.remove(elem, 'data-' + name);
 		}
 	},
-	$cache = {
+	$cache: {
 		data: {},
 		get: function (key)
 		{
@@ -360,19 +357,19 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$storage = {
-		set: localStorage ?
+	$storage: {
+		set: window.localStorage ?
 		function (name, value)
 		{
 			localStorage[name] = typeof value === 'object' ? $json.encode(value) : value;
-		} :
+		}:
 		function (name, value)
 		{
 			var value = typeof value === 'object' ? $json.encode(value) : value;
 			$data.set(Qatrix.storage, name, value);
 			Qatrix.storage.save('Qstorage');
 		},
-		get: localStorage ?
+		get: window.localStorage ?
 		function (name)
 		{
 			var data = localStorage[name];
@@ -381,18 +378,18 @@ var Qatrix = {
 				return $json.decode(data);
 			}
 			return data;
-		} :
+		}:
 		function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			return $data.get(Qatrix.storage, name);
 		},
-		remove: localStorage ?
+		remove: window.localStorage ?
 		function (name)
 		{
 			localStorage.removeItem(name);
 			return true;
-		} :
+		}:
 		function (name)
 		{
 			Qatrix.storage.load('Qstorage');
@@ -400,7 +397,7 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$event = {
+	$event: {
 		add: function (elem, type, handler)
 		{
 			if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
@@ -421,13 +418,15 @@ var Qatrix = {
 			else
 			{
 				// Prevent attaching duplicate event with same event type and same handler for IE8-6
-				var handlerName = handler.toString();
-				if ($data.get(elem, 'event-' + type + '-' + handlerName))
+				if (elem.getAttribute)
 				{
-					return false;
+					var handlerName = handler.toString();
+					if ($data.get(elem, 'event-' + type + '-' + handlerName))
+					{
+						return false;
+					}
+					$data.set(elem, 'event-' + type + '-' + handlerName, true);
 				}
-				$data.set(elem, 'event-' + type + '-' + handlerName, true);
-
 				elem.attachEvent('on' + type, handler);
 			}
 			return elem;
@@ -437,10 +436,14 @@ var Qatrix = {
 		{
 			elem.removeEventListener(type, handler, false);
 			return elem;
-		} :
+		}:
 		function (elem, type, handler)
 		{
 			elem.detachEvent('on' + type, handler);
+			if (elem.removeAttribute)
+			{
+				$attr.remove(elem, 'event-' + type + '-' + handler.toString());
+			}
 			return elem;
 		},
 		handler: {
@@ -471,9 +474,7 @@ var Qatrix = {
 		},
 		key: function (event)
 		{
-			return event.which ? event.which :
-				event.charCode ? event.charCode :
-				event.keyCode;
+			return event.which || event.charCode || event.keyCode;
 		},
 		metaKey: function (event)
 		{
@@ -484,7 +485,7 @@ var Qatrix = {
 			return event.target ? event.target : event.srcElement || document;
 		}
 	},
-	$clear = function (timer)
+	$clear: function (timer)
 	{
 		if (timer)
 		{
@@ -493,48 +494,46 @@ var Qatrix = {
 		}
 		return null;
 	},
-	$ready = function (callback)
+	$ready: function (callback)
 	{
 		if (document.readyState === 'complete')
 		{
 			return setTimeout(callback, 1);
 		}
-		
-		if(document.addEventListener)
+
+		if (document.addEventListener)
 		{
-			document.addEventListener( 'DOMContentLoaded', callback, false );
+			document.addEventListener('DOMContentLoaded', callback, false);
 			return;
 		}
-		
+
 		// Hack IE DOM for ready event
 		function domready()
 		{
 			try
 			{
 				document.documentElement.doScroll('left');
-				callback();
 			}
 			catch (e)
 			{
 				setTimeout(domready, 1);
 				return;
 			}
+			callback();
 		}
 		domready();
 	},
-	$css = {
+	$css: {
 		get: function (elem, name)
 		{
 			return $style.get(elem, name);
 		},
 		set: function (elem, name, value)
 		{
-			typeof name === 'object' ?
-			$each(name, function (propertyName, value)
+			typeof name === 'object' ? $each(name, function (propertyName, value)
 			{
 				$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
-			}) :
-			$style.set(elem, $string.camelCase(name), $css.fix(name, value));
+			}) : $style.set(elem, $string.camelCase(name), $css.fix(name, value));
 			return elem;
 		},
 		number: {
@@ -561,7 +560,7 @@ var Qatrix = {
 			return value == null && isNaN(value) ? false : value;
 		}
 	},
-	$style = {
+	$style: {
 		get: window.getComputedStyle ?
 		function (elem, property)
 		{
@@ -570,7 +569,7 @@ var Qatrix = {
 				return document.defaultView.getComputedStyle(elem, null).getPropertyValue(property);
 			}
 			return false;
-		} :
+		}:
 		function (elem, property)
 		{
 			if (elem !== null)
@@ -587,12 +586,12 @@ var Qatrix = {
 			}
 			return false;
 		},
-		set: document.documentElement.style.opacity !== undefined ?
+		set: document.documentElement.style.opacity === '' ?
 		function (elem, name, value)
 		{
 			elem.style[name] = value;
 			return true;
-		} :
+		}:
 		function (elem, name, value)
 		{
 			if (!elem.currentStyle || !elem.currentStyle.hasLayout)
@@ -610,13 +609,13 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$pos = function (elem, x, y)
+	$pos: function (elem, x, y)
 	{
 		$style.set(elem, 'left', x + 'px');
 		$style.set(elem, 'top', y + 'px');
 		return elem;
 	},
-	$offset = function (elem)
+	$offset: function (elem)
 	{
 		var left = elem.offsetLeft,
 			top = elem.offsetTop,
@@ -637,34 +636,34 @@ var Qatrix = {
 			left: left
 		};
 	},
-	$append = function (elem, node)
+	$append: function (elem, node)
 	{
 		return elem.appendChild(Qatrix.nodeManip(elem, node));
 	},
-	$prepend = function (elem, node)
+	$prepend: function (elem, node)
 	{
 		return elem.firstChild ? elem.insertBefore(Qatrix.nodeManip(elem, node), elem.firstChild) : elem.appendChild(Qatrix.nodeManip(elem, node));
 	},
-	$before = function (elem, node)
+	$before: function (elem, node)
 	{
 		return elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem);
 	},
-	$after = function (elem, node)
+	$after: function (elem, node)
 	{
 		return elem.nextSibling ? elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(Qatrix.nodeManip(elem, node));
 	},
-	$remove = function (elem)
+	$remove: function (elem)
 	{
 		return elem != null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 	},
-	$empty = function (elem)
+	$empty: function (elem)
 	{
 		// Directly setting the innerHTML attribute to blank will release memory for browser
 		// Only remove the childNodes will not able to do this for some browsers
 		elem.innerHTML = '';
 		return elem;
 	},
-	$html = function (elem, html)
+	$html: function (elem, html)
 	{
 		if (!html)
 		{
@@ -680,7 +679,7 @@ var Qatrix = {
 		}
 		return elem;
 	},
-	$text = function (elem, text)
+	$text: function (elem, text)
 	{
 		// Retrieve the text value
 		// textContent and innerText returns different results from different browser
@@ -709,7 +708,7 @@ var Qatrix = {
 		elem.appendChild(document.createTextNode(text));
 		return elem;
 	},
-	$className = {
+	$className: {
 		add: function (elem, name)
 		{
 			if (elem.className === '')
@@ -720,11 +719,11 @@ var Qatrix = {
 			{
 				var ori = elem.className,
 					nclass = [];
-				$each(name.split(Qatrix.rspace), function(i, item)
+				$each(name.split(Qatrix.rspace), function (i, item)
 				{
 					if (!new RegExp('\\b(' + item + ')\\b').test(ori))
 					{
-						nclass.push( ' ' + item);
+						nclass.push(' ' + item);
 					}
 				});
 				elem.className += nclass.join('');
@@ -746,29 +745,27 @@ var Qatrix = {
 			return elem;
 		}
 	},
-	$hide = function (elem)
+	$hide: function (elem)
 	{
 		$each(arguments, function (i, argument)
 		{
-			typeof argument === 'string' ? $(argument).style.display = 'none' :
-			typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
+			typeof argument === 'string' ? $(argument).style.display = 'none' : typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
 			{
 				elem.style.display = 'none';
 			}) : argument.style.display = 'none';
 		});
 	},
-	$show = function (elem)
+	$show: function (elem)
 	{
 		$each(arguments, function (i, argument)
 		{
-			typeof argument === 'string' ? $(argument).style.display = 'block' :
-			typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
+			typeof argument === 'string' ? $(argument).style.display = 'block' : typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
 			{
 				elem.style.display = 'block';
 			}) : argument.style.display = 'block';
 		});
 	},
-	$animate = (function ()
+	$animate: (function ()
 	{
 		// Use CSS3 native transition for animation as possible
 		var style = document.documentElement.style;
@@ -779,14 +776,15 @@ var Qatrix = {
 			style.MsTransition === '' ||
 			style.transition === ''
 		);
-	}()) ? (function ()
+	}()) ?
+	(function ()
 	{
 		var style = document.documentElement.style,
 			prefix_name = style.webkitTransition === '' ? 'Webkit' :
 									style.MozTransition === '' ? 'Moz' :
 									style.OTransition === '' ? 'O' :
 									style.MsTransition === '' ? 'ms' : '',
-			transition_name = prefix_name + 'Transition';
+			transition_name = prefix_name + 'Transition',
 			transform_name = prefix_name + 'Transform';
 		return function (elem, properties, duration, callback)
 		{
@@ -820,9 +818,10 @@ var Qatrix = {
 				css_style.push(css);
 			}
 
-			style[transition_name] = 'all ' + duration + 'ms';
 			setTimeout(function ()
 			{
+				style[transition_name] = 'all ' + duration + 'ms';
+				
 				// Using CSS3 transform function will enable hardware acceleration to handle this animation
 				if (properties['left'] || properties['top'])
 				{
@@ -832,7 +831,7 @@ var Qatrix = {
 				{
 					style[css_name[css]] = css_value[css] + unit[css];
 				});
-			}, 1);
+			}, 10);
 
 			// Animation completed
 			setTimeout(function ()
@@ -847,7 +846,7 @@ var Qatrix = {
 
 			return elem;
 		}
-	})() :
+	})():
 	function (elem, properties, duration, callback)
 	{
 		var step = 0,
@@ -855,73 +854,71 @@ var Qatrix = {
 			i = 0,
 			j = 0,
 			length = 0,
-			css,
-			css_to_value = [],
+			css, css_to_value = [],
 			css_from_value = [],
 			css_name = [],
 			css_unit = [],
 			css_style = [],
-			property_value,
-			offset,
-			timer;
+			property_value, offset, timer;
 		duration = duration || '300';
-				
+
 		for (css in properties)
 		{
-			css_name.push($string.camelCase(css));
+			css_name.push( css === 'opacity' ? 'filter' : $string.camelCase(css));
 			if (properties[css].from != null)
 			{
 				property_value = properties[css].to;
-				css_from_value.push( !$css.number[css] ? parseInt(properties[css].from) : properties[css].from );
-				$style.set(elem, css_name[i], css_from_value[i] + css_unit[i]);
+				css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
+				$style.set(elem, css_name[i], css_from_value[i] + $css.unit(css, property_value));
 			}
 			else
 			{
 				property_value = properties[css];
 
 				// Speical handle for left and top
-				if( css === 'left' || css === 'top' )
+				if (css === 'left' || css === 'top')
 				{
 					offset = $offset(elem);
-					css_from_value.push( css === 'left' ? offset.left : offset.top );
+					css_from_value.push(css === 'left' ? offset.left : offset.top);
 				}
 				else
 				{
-					css_from_value.push( parseInt($style.get(elem, $string.camelCase(css))) );
+					css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
 				}
 			}
-			css_to_value.push( !$css.number[css] ? parseInt(property_value) : property_value );
-			css_unit.push( $css.unit(css, property_value) );
+			css_to_value.push(!$css.number[css] ? parseInt(property_value) : property_value);
+			css_unit.push($css.unit(css, property_value));
 			i++;
 			length++;
 		}
 		// Pre-calculation for CSS value
-		for(j = 0; j < p ; j++)
+		for (j = 0; j < p; j++)
 		{
 			css_style[j] = [];
-			for(i = 0; i < length ; i++)
+			for (i = 0; i < length; i++)
 			{
-				css_style[j][css_name[i]] = ( css_from_value[i] + ( css_to_value[i] - css_from_value[i] ) / p * j  ) + css_unit[i];
+				css_style[j][css_name[i]] = css_name[i] === 'filter' ? 'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
+															(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
 			}
 		}
-		
+
 		for (; i < p; i++)
 		{
 			timer = setTimeout(function ()
 			{
-				for(i = 0; i < length ; i++)
+				for (i = 0; i < length; i++)
 				{
 					elem.style[css_name[i]] = css_style[step][css_name[i]];
 				}
 				step++;
 			}, (duration / p) * i);
 		}
-		
+
 		setTimeout(function ()
 		{
-			for(i = 0; i < length ; i++)
+			for (i = 0; i < length; i++)
 			{
-				$style.set(elem, css_name[i], css_to_value[i] + css_unit[i]);
+				elem.style[css_name[i]] = css_style[step][css_name[i]];
 			}
 			if (callback)
 			{
@@ -930,7 +927,7 @@ var Qatrix = {
 		}, duration);
 		return elem;
 	},
-	$fadeout = function (elem, duration, callback)
+	$fadeout: function (elem, duration, callback)
 	{
 		duration = duration || '500';
 		return $animate(elem, {
@@ -940,7 +937,7 @@ var Qatrix = {
 			}
 		}, duration, callback);
 	},
-	$fadein = function (elem, duration, callback)
+	$fadein: function (elem, duration, callback)
 	{
 		duration = duration || '500';
 		return $animate(elem, {
@@ -950,7 +947,7 @@ var Qatrix = {
 			}
 		}, duration, callback);
 	},
-	$cookie = {
+	$cookie: {
 		get: function (key)
 		{
 			var tempArr = document.cookie.split('; '),
@@ -988,21 +985,21 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$json = {
-		decode: window.JSON && window.JSON.parse ?
+	$json: {
+		decode: window.JSON ?
 		function (data)
 		{
 			return JSON.parse($string.trim(data));
-		} :
+		}:
 		function (data)
 		{
 			return $json.isJSON(data) ? eval('(' + $string.trim(data) + ')') : false;
 		},
-		encode: window.JSON && window.JSON.stringify ?
+		encode: window.JSON ?
 		function (data)
 		{
 			return JSON.stringify(data);
-		} :
+		}:
 		function (data)
 		{
 			function stringify(data)
@@ -1023,20 +1020,20 @@ var Qatrix = {
 						{
 						case 'object':
 							rvalue = value === null ? value :
-								// For ISO date format
-								value.getDay ? '"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1).replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
-								// For Array
-								value.length ? '[' + (function()
+							// For ISO date format
+							value.getDay ? '"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1).replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
+							// For Array
+							value.length ? '[' + (function ()
+							{
+								var rdata = [];
+								$each(value, function (i, item)
 								{
-									var rdata = [];
-									$each(value, function (i, item)
-									{
-										rdata.push( ( typeof item === 'string'  ? '"' + $string.slashes( item ) + '"' : item ) );
-									});
-									return rdata.join(',');
-								})() + ']' :
-								// For Object
-								$json.encode(value);
+									rdata.push((typeof item === 'string' ? '"' + $string.slashes(item) + '"' : item));
+								});
+								return rdata.join(',');
+							})() + ']' :
+							// For Object
+							$json.encode(value);
 							break;
 						case 'number':
 							rvalue = !isFinite(value) ? null : value;
@@ -1061,7 +1058,7 @@ var Qatrix = {
 			return typeof string === 'string' && string !== '' ? Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, '')) : false;
 		}
 	},
-	$ajax = function (url, options)
+	$ajax: function (url, options)
 	{
 		if (typeof url === 'object')
 		{
@@ -1078,14 +1075,14 @@ var Qatrix = {
 			url = url || options.url;
 			request.open(type, url, true);
 			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-			if (options.header !== undefined)
+			if (options.header)
 			{
 				$each(options.header, function (key, value)
 				{
 					request.setRequestHeader(key, value);
 				});
 			}
-			if (options.data !== undefined)
+			if (options.data)
 			{
 				$each(options.data, function (key, value)
 				{
@@ -1095,14 +1092,14 @@ var Qatrix = {
 			request.send(param.join('&').replace(/%20/g, '+'));
 			request.onreadystatechange = function ()
 			{
-				if (request.readyState == 4 && request.status == 200 && options.success !== undefined)
+				if (request.readyState === 4 && request.status === 200 && options.success)
 				{
-					response = request.responseText;
-					options.success( response != '' && $json.isJSON(response) ? $json.decode(response) : response );
+					data = request.responseText;
+					options.success(data != '' && $json.isJSON(data) ? $json.decode(data) : data);
 				}
 				else
 				{
-					if (options.error !== undefined)
+					if (options.error)
 					{
 						options.error.call();
 					}
@@ -1110,63 +1107,74 @@ var Qatrix = {
 			};
 		}
 	},
-	$loadscript = function (src)
+	$loadscript: function (src)
 	{
-		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement,
-		$new('script', {
+		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
 		}));
 	},
-	$url = function (data)
+	$url: function (data)
 	{
 		return encodeURIComponent(data);
 	},
-	$rand = function (min, max)
+	$rand: function (min, max)
 	{
 		return Math.floor(Math.random() * (max - min + 1) + min);
-	};
+	},
+	$browser: (function(){
+		var ua = navigator.userAgent.toLowerCase(),
+			browser = {
+				msie: /msie/,
+				msie6: /msie 6\.0/,
+				msie7: /msie 7\.0/,
+				msie8: /msie 8\.0/,
+				msie9: /msie 9\.0/,
+				msie10: /msie 10\.0/,
+				firefox: /firefox/,
+				opera: /opera/,
+				webkit: /webkit/,
+				iPad: /ipad/,
+				iPhone: /iphone/,
+				android: /android/
+			},
+			key;
+		for (key in browser)
+		{
+			browser[key] = browser[key].test(ua);
+		}
+		return browser;
+	}())
+};
 
-(function ()
+// Expose Qatrix functions to global
+window.Qatrix = Qatrix;
+
+for (var fn in Qatrix)
 {
-	$browser = {};
-	var ua = navigator.userAgent.toLowerCase(),
-		rbrowser = {
-			msie: /msie/,
-			msie6: /msie 6\.0/,
-			msie7: /msie 7\.0/,
-			msie8: /msie 8\.0/,
-			msie9: /msie 9\.0/,
-			msie10: /msie 10\.0/,
-			firefox: /firefox/,
-			opera: /opera/,
-			webkit: /webkit/,
-			iPad: /ipad/,
-			iPhone: /iphone/,
-			android: /android/
-		},
-		i;
-	$each(rbrowser, function (key, value)
+	if (fn.indexOf('$') === 0)
 	{
-		$browser[key] = rbrowser[key].test(ua);
-	});
-	
-	$ready(function ()
+		window[fn] = Qatrix[fn];
+	}
+}
+
+$ready(function ()
+{
+	// For hack CSS selector
+	if (!document.querySelectorAll)
 	{
-		// For hack CSS selector
-		if (document.querySelectorAll === undefined)
-		{
-			Qatrix.Qselector = $append(document.body, $new('style'));
-		}
-		// For hack storage
-		if (localStorage)
-		{
-			Qatrix.storage = $append(document.body, $new('link', {
-				'style': {
-					'behavior': 'url(#default#userData)'
-				}
-			}));
-		}
-	});
+		Qatrix.Qselector = $append(document.body, $new('style'));
+	}
+	// For hack storage
+	if (!window.localStorage)
+	{
+		Qatrix.storage = $append(document.body, $new('link', {
+			'style': {
+				'behavior': 'url(#default#userData)'
+			}
+		}));
+	}
+});
+
 })();
