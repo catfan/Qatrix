@@ -18,7 +18,7 @@ CSS3 and HTML5 supported. Qatrix is using more native code and special design to
 The name of functions on Qatrix are simple, user-friendly and familiar with the jQuery. It will be much more easy to use without re-learn other new concept and knowledge.
 
 ### Incredible size ###
-Only 4.7KB compressed and gzipped file size with 60+ functions, including hardware accelerated animation, DOM, AJAX, various selectors, cookie, event handle, cache system functions, and so on, enough for most common web development needs. Load powerful script instantly without expectation.
+Only 4.7KB compressed and gzipped file size with 60+ functions, including hardware accelerated animation, DOM, AJAX, various selectors, cookie, event handle, local storage, cache system functions, and so on, enough for most common web development needs. Load powerful script instantly without expectation.
 
 License
 --------
