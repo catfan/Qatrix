@@ -831,7 +831,7 @@ var Qatrix = {
 				{
 					style[css_name[css]] = css_value[css] + unit[css];
 				});
-			}, 10);
+			}, 15);
 
 			// Animation completed
 			setTimeout(function ()
