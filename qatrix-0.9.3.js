@@ -377,12 +377,12 @@ var Qatrix = {
 			{
 				return $json.decode(data);
 			}
-			return data;
+			return data || '';
 		}:
 		function (name)
 		{
 			Qatrix.storage.load('Qstorage');
-			return $data.get(Qatrix.storage, name);
+			return $data.get(Qatrix.storage, name) || '';
 		},
 		remove: window.localStorage ?
 		function (name)
@@ -1149,7 +1149,6 @@ var Qatrix = {
 };
 
 // Expose Qatrix functions to global
-window.Qatrix = Qatrix;
 
 for (var fn in Qatrix)
 {
@@ -1158,6 +1157,8 @@ for (var fn in Qatrix)
 		window[fn] = Qatrix[fn];
 	}
 }
+window.Qatrix = Qatrix;
+
 
 $ready(function ()
 {
