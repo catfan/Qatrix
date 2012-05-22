@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.3
+    Qatrix JavaScript v0.9.4
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
@@ -9,7 +9,7 @@
 (function () {
 
 var Qatrix = {
-	version: '0.9.3',
+	version: '0.9.4',
 
 	rbline: /\n+/g,
 	rbrace: /^(?:\{.*\}|\[.*\])$/,
@@ -404,15 +404,13 @@ var Qatrix = {
 			{
 				return false;
 			}
-
-			if (type === 'mouseenter' || type === 'mouseleave')
-			{
-				type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
-				handler = $event.handler.mouseenter(handler);
-			}
-
 			if (elem.addEventListener)
 			{
+				if (type === 'mouseenter' || type === 'mouseleave')
+				{
+					type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
+					handler = $event.handler.mouseenter(handler);
+				}
 				elem.addEventListener(type, handler, false);
 			}
 			else
@@ -500,13 +498,11 @@ var Qatrix = {
 		{
 			return setTimeout(callback, 1);
 		}
-
 		if (document.addEventListener)
 		{
 			document.addEventListener('DOMContentLoaded', callback, false);
 			return;
 		}
-
 		// Hack IE DOM for ready event
 		function domready()
 		{
@@ -617,23 +613,12 @@ var Qatrix = {
 	},
 	$offset: function (elem)
 	{
-		var left = elem.offsetLeft,
-			top = elem.offsetTop,
-			offsetParent = elem.offsetParent;
-		while (offsetParent !== null)
-		{
-			left += offsetParent.offsetLeft + offsetParent.clientLeft;
-			top += offsetParent.offsetTop + offsetParent.clientTop;
-			if (offsetParent != document.body && offsetParent != document.documentElement)
-			{
-				left -= offsetParent.scrollLeft;
-				top -= offsetParent.scrollTop;
-			}
-			offsetParent = offsetParent.offsetParent;
-		}
+		var body = document.body,
+			doc_elem = document.documentElement,
+			box = elem.getBoundingClientRect();
 		return {
-			top: top,
-			left: left
+			top: box.top + (window.scrollY || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
+			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0)
 		};
 	},
 	$append: function (elem, node)
@@ -688,17 +673,25 @@ var Qatrix = {
 		{
 			var rtext = '',
 				textContent = (elem.textContent),
-				nodeType;
+				nodeType, block, preblock;
 			for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 			{
 				nodeType = elem.nodeType;
 				if (nodeType === 3 && $string.trim(elem.nodeValue) != '')
 				{
 					rtext += elem.nodeValue.replace(Qatrix.rbline, '') + "\n";
+					preblock = true;
 				}
 				if (nodeType === 1 || nodeType === 2)
 				{
-					rtext += (textContent ? $string.trim(elem.textContent.replace(Qatrix.rbline, '')) : elem.innerText.replace(Qatrix.rline, '')) + "\n";
+					block = $style.get(elem, 'display') === 'block';
+					if (block && !preblock)
+					{
+						rtext += "\n";
+					}
+					rtext += textContent ? $string.trim(elem.textContent.replace(Qatrix.rbline, '')) : elem.innerText.replace(Qatrix.rline, '');
+					rtext += block ? "\n" : '';
+					preblock = block;
 				}
 			}
 			return rtext;
@@ -989,7 +982,7 @@ var Qatrix = {
 		decode: window.JSON ?
 		function (data)
 		{
-			return JSON.parse($string.trim(data));
+			return $json.isJSON(data) ? JSON.parse($string.trim(data)) : false;
 		}:
 		function (data)
 		{
@@ -1055,7 +1048,7 @@ var Qatrix = {
 		},
 		isJSON: function (string)
 		{
-			return typeof string === 'string' && string !== '' ? Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, '')) : false;
+			return typeof string === 'string' && $string.trim(string) !== '' ? Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, '')) : false;
 		}
 	},
 	$ajax: function (url, options)
@@ -1149,7 +1142,6 @@ var Qatrix = {
 };
 
 // Expose Qatrix functions to global
-
 for (var fn in Qatrix)
 {
 	if (fn.indexOf('$') === 0)
@@ -1158,7 +1150,6 @@ for (var fn in Qatrix)
 	}
 }
 window.Qatrix = Qatrix;
-
 
 $ready(function ()
 {
