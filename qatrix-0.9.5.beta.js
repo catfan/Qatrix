@@ -35,7 +35,7 @@ var Qatrix = {
 				ret = [];
 
 			div.innerHTML = node;
-			while (div.childNodes[0] != null)
+			while (div.childNodes[0] !== null)
 			{
 				fragment.appendChild(div.childNodes[0]);
 			}
@@ -85,7 +85,7 @@ var Qatrix = {
 		if (typeof id === 'string')
 		{
 			elem = $(id);
-			if (elem != null && callback)
+			if (elem !== null && callback)
 			{
 				callback(elem);
 			}
@@ -94,7 +94,7 @@ var Qatrix = {
 		$each(id, function (i, item)
 		{
 			elem = $(item);
-			if (elem != null)
+			if (elem !== null)
 			{
 				match.push(elem);
 			}
@@ -176,7 +176,7 @@ var Qatrix = {
 			});
 		}
 		return match;
-	} :
+	}:
 	// Hack native CSS selector quering matched element for IE6/7
 	function (selector, callback)
 	{
@@ -553,7 +553,7 @@ var Qatrix = {
 			{
 				value += 'px';
 			}
-			return value == null && isNaN(value) ? false : value;
+			return value === null && isNaN(value) ? false : value;
 		}
 	},
 	$style: {
@@ -618,7 +618,9 @@ var Qatrix = {
 			box = elem.getBoundingClientRect();
 		return {
 			top: box.top + (window.scrollY || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
-			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0)
+			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
+			width: elem.offsetWidth,
+			height: elem.offsetHeight
 		};
 	},
 	$append: function (elem, node)
@@ -639,7 +641,7 @@ var Qatrix = {
 	},
 	$remove: function (elem)
 	{
-		return elem != null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
+		return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 	},
 	$empty: function (elem)
 	{
@@ -823,7 +825,6 @@ var Qatrix = {
 				$each(css_style, function (i, css)
 				{
 					style[css_name[css]] = css_value[css] + unit[css];
-									alert( css + ' ' + css_value[css] + unit[css] );
 				});
 			}, 15);
 
@@ -844,21 +845,21 @@ var Qatrix = {
 	function (elem, properties, duration, callback)
 	{
 		var step = 0,
-			p = 30,
 			i = 0,
 			j = 0,
 			length = 0,
-			css, css_to_value = [],
+			p = 30,
+			css_to_value = [],
 			css_from_value = [],
 			css_name = [],
 			css_unit = [],
 			css_style = [],
-			property_value, offset, timer;
+			property_value, css, offset, timer;
 		duration = duration || '300';
 
 		for (css in properties)
 		{
-			css_name.push( css === 'opacity' ? 'filter' : $string.camelCase(css));
+			css_name.push(css === 'opacity' ? 'filter' : $string.camelCase(css));
 			if (properties[css].from != null)
 			{
 				property_value = properties[css].to;
@@ -951,7 +952,7 @@ var Qatrix = {
 			for (; i < l; i++)
 			{
 				temp = tempArr[i].split('=');
-				if (temp[0] == key)
+				if (temp[0] === key)
 				{
 					return decodeURIComponent(temp[1]);
 				}
