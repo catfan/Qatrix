@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.4
+    Qatrix JavaScript v0.9.5
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
@@ -9,14 +9,14 @@
 (function () {
 
 var Qatrix = {
-	version: '0.9.4',
+	version: '0.9.5',
 
 	rbline: /\n+/g,
 	rbrace: /^(?:\{.*\}|\[.*\])$/,
 	rcamelCase: /-([a-z])/ig,
 	rdigit: /\d/,
 	rline: /\r\n/g,
-	rnum: /[0-9\.]/ig,
+	rnum: /[\-\+0-9\.]/ig,
 	rspace: /\s+/,
 	rtrim: /(^\s*)|(\s*$)/g,
 	rvalidchars: /^[\],:{}\s]*$/,
@@ -31,7 +31,7 @@ var Qatrix = {
 		{
 			var doc = elem && elem.ownerDocument || document,
 				fragment = doc.createDocumentFragment(),
-				div = document.createElement('div'),
+				div = $new('div'),
 				ret = [];
 
 			div.innerHTML = node;
@@ -85,7 +85,7 @@ var Qatrix = {
 		if (typeof id === 'string')
 		{
 			elem = $(id);
-			if (elem != null && callback)
+			if (elem !== null && callback)
 			{
 				callback(elem);
 			}
@@ -94,7 +94,7 @@ var Qatrix = {
 		$each(id, function (i, item)
 		{
 			elem = $(item);
-			if (elem != null)
+			if (elem !== null)
 			{
 				match.push(elem);
 			}
@@ -115,7 +115,7 @@ var Qatrix = {
 			dom.length ? $each(dom, function (i, item)
 			{
 				callback(item);
-			}) : callback(item);
+			}) : callback(dom);
 		}
 		return dom;
 	},
@@ -176,7 +176,7 @@ var Qatrix = {
 			});
 		}
 		return match;
-	} :
+	}:
 	// Hack native CSS selector quering matched element for IE6/7
 	function (selector, callback)
 	{
@@ -357,20 +357,13 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$storage: {
-		set: window.localStorage ?
-		function (name, value)
+	$storage: window.localStorage ?
+	{
+		set: function (name, value)
 		{
 			localStorage[name] = typeof value === 'object' ? $json.encode(value) : value;
-		}:
-		function (name, value)
-		{
-			var value = typeof value === 'object' ? $json.encode(value) : value;
-			$data.set(Qatrix.storage, name, value);
-			Qatrix.storage.save('Qstorage');
 		},
-		get: window.localStorage ?
-		function (name)
+		get: function (name)
 		{
 			var data = localStorage[name];
 			if ($json.isJSON(data))
@@ -378,19 +371,26 @@ var Qatrix = {
 				return $json.decode(data);
 			}
 			return data || '';
-		}:
-		function (name)
+		},
+		remove: function (name)
+		{
+			localStorage.removeItem(name);
+			return true;
+		}
+	}:
+	{
+		set: function (name, value)
+		{
+			var value = typeof value === 'object' ? $json.encode(value) : value;
+			$data.set(Qatrix.storage, name, value);
+			Qatrix.storage.save('Qstorage');
+		},
+		get: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			return $data.get(Qatrix.storage, name) || '';
 		},
-		remove: window.localStorage ?
-		function (name)
-		{
-			localStorage.removeItem(name);
-			return true;
-		}:
-		function (name)
+		remove: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			$data.remove(Qatrix.storage, name);
@@ -553,7 +553,7 @@ var Qatrix = {
 			{
 				value += 'px';
 			}
-			return value == null && isNaN(value) ? false : value;
+			return value === null && isNaN(value) ? false : value;
 		}
 	},
 	$style: {
@@ -618,7 +618,9 @@ var Qatrix = {
 			box = elem.getBoundingClientRect();
 		return {
 			top: box.top + (window.scrollY || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
-			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0)
+			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
+			width: elem.offsetWidth,
+			height: elem.offsetHeight
 		};
 	},
 	$append: function (elem, node)
@@ -639,7 +641,7 @@ var Qatrix = {
 	},
 	$remove: function (elem)
 	{
-		return elem != null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
+		return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 	},
 	$empty: function (elem)
 	{
@@ -672,7 +674,7 @@ var Qatrix = {
 		if (!text)
 		{
 			var rtext = '',
-				textContent = (elem.textContent),
+				textContent = elem.textContent,
 				nodeType, block, preblock;
 			for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 			{
@@ -791,7 +793,7 @@ var Qatrix = {
 			for (css in properties)
 			{
 				css_name[css] = $string.camelCase(css);
-				if (properties[css].from != null)
+				if (properties[css].from)
 				{
 					css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
 					unit[css] = $css.unit(css, properties[css].to);
@@ -843,22 +845,22 @@ var Qatrix = {
 	function (elem, properties, duration, callback)
 	{
 		var step = 0,
-			p = 30,
 			i = 0,
 			j = 0,
 			length = 0,
-			css, css_to_value = [],
+			p = 30,
+			css_to_value = [],
 			css_from_value = [],
 			css_name = [],
 			css_unit = [],
 			css_style = [],
-			property_value, offset, timer;
+			property_value, css, offset, timer;
 		duration = duration || '300';
 
 		for (css in properties)
 		{
-			css_name.push( css === 'opacity' ? 'filter' : $string.camelCase(css));
-			if (properties[css].from != null)
+			css_name.push(css === 'opacity' ? 'filter' : $string.camelCase(css));
+			if (properties[css].from)
 			{
 				property_value = properties[css].to;
 				css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
@@ -950,7 +952,7 @@ var Qatrix = {
 			for (; i < l; i++)
 			{
 				temp = tempArr[i].split('=');
-				if (temp[0] == key)
+				if (temp[0] === key)
 				{
 					return decodeURIComponent(temp[1]);
 				}
@@ -1059,50 +1061,48 @@ var Qatrix = {
 			url = undefined;
 		}
 		options = options || {};
-		var request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
+		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
 			type = options.type || 'POST',
-			response, url;
-		if (request)
+			url = url || options.url,
+			response;
+		request.open(type, url, true);
+		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+		if (options.header)
 		{
-			url = url || options.url;
-			request.open(type, url, true);
-			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-			if (options.header)
+			$each(options.header, function (key, value)
 			{
-				$each(options.header, function (key, value)
-				{
-					request.setRequestHeader(key, value);
-				});
-			}
-			if (options.data)
-			{
-				$each(options.data, function (key, value)
-				{
-					param.push($url(key) + '=' + $url(value));
-				});
-			}
-			request.send(param.join('&').replace(/%20/g, '+'));
-			request.onreadystatechange = function ()
-			{
-				if (request.readyState === 4 && request.status === 200 && options.success)
-				{
-					data = request.responseText;
-					options.success(data != '' && $json.isJSON(data) ? $json.decode(data) : data);
-				}
-				else
-				{
-					if (options.error)
-					{
-						options.error.call();
-					}
-				}
-			};
+				request.setRequestHeader(key, value);
+			});
 		}
+		if (options.data)
+		{
+			$each(options.data, function (key, value)
+			{
+				param.push($url(key) + '=' + $url(value));
+			});
+		}
+		request.send(param.join('&').replace(/%20/g, '+'));
+		request.onreadystatechange = function ()
+		{
+			if (request.readyState === 4 && request.status === 200 && options.success)
+			{
+				data = request.responseText;
+				options.success(data !== '' && $json.isJSON(data) ? $json.decode(data) : data);
+			}
+			else
+			{
+				if (options.error)
+				{
+					options.error.call();
+				}
+			}
+		};
 	},
 	$loadscript: function (src)
 	{
-		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
+		var doc = document;
+		return $before(doc.head || doc.getElementsByTagName('head')[0] || doc.documentElement, $new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
