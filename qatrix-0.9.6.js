@@ -1,15 +1,15 @@
 /*
-    Qatrix JavaScript v0.9.5
+    Qatrix JavaScript v0.9.6
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
-    For details, see the Qatrix website: http:// qatrix.com
+    For details, see the Qatrix website: http://qatrix.com
 */
 
 (function () {
 
 var Qatrix = {
-	version: '0.9.5',
+	version: '0.9.6',
 
 	rbline: /\n+/g,
 	rbrace: /^(?:\{.*\}|\[.*\])$/,
@@ -31,11 +31,11 @@ var Qatrix = {
 		{
 			var doc = elem && elem.ownerDocument || document,
 				fragment = doc.createDocumentFragment(),
-				div = document.createElement('div'),
+				div = $new('div'),
 				ret = [];
 
 			div.innerHTML = node;
-			while (div.childNodes[0] !== null)
+			while (div.childNodes[0] != null)
 			{
 				fragment.appendChild(div.childNodes[0]);
 			}
@@ -357,20 +357,13 @@ var Qatrix = {
 			return true;
 		}
 	},
-	$storage: {
-		set: window.localStorage ?
-		function (name, value)
+	$storage: window.localStorage ?
+	{
+		set: function (name, value)
 		{
 			localStorage[name] = typeof value === 'object' ? $json.encode(value) : value;
-		}:
-		function (name, value)
-		{
-			var value = typeof value === 'object' ? $json.encode(value) : value;
-			$data.set(Qatrix.storage, name, value);
-			Qatrix.storage.save('Qstorage');
 		},
-		get: window.localStorage ?
-		function (name)
+		get: function (name)
 		{
 			var data = localStorage[name];
 			if ($json.isJSON(data))
@@ -378,19 +371,26 @@ var Qatrix = {
 				return $json.decode(data);
 			}
 			return data || '';
-		}:
-		function (name)
+		},
+		remove: function (name)
+		{
+			localStorage.removeItem(name);
+			return true;
+		}
+	}:
+	{
+		set: function (name, value)
+		{
+			var value = typeof value === 'object' ? $json.encode(value) : value;
+			$data.set(Qatrix.storage, name, value);
+			Qatrix.storage.save('Qstorage');
+		},
+		get: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			return $data.get(Qatrix.storage, name) || '';
 		},
-		remove: window.localStorage ?
-		function (name)
-		{
-			localStorage.removeItem(name);
-			return true;
-		}:
-		function (name)
+		remove: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			$data.remove(Qatrix.storage, name);
@@ -476,7 +476,7 @@ var Qatrix = {
 		},
 		metaKey: function (event)
 		{
-			return !event.metaKey && event.ctrlKey ? event.ctrlKey : event.metaKey;
+			return event.metaKey === undefined ? event.ctrlKey : event.metaKey;
 		},
 		target: function (event)
 		{
@@ -652,7 +652,7 @@ var Qatrix = {
 	},
 	$html: function (elem, html)
 	{
-		if (!html)
+		if (html === undefined)
 		{
 			return elem.nodeType === 1 ? elem.innerHTML : null;
 		}
@@ -671,7 +671,7 @@ var Qatrix = {
 		// Retrieve the text value
 		// textContent and innerText returns different results from different browser
 		// So it have to rewrite the process method
-		if (!text)
+		if (text === undefined)
 		{
 			var rtext = '',
 				textContent = elem.textContent,
@@ -679,7 +679,7 @@ var Qatrix = {
 			for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 			{
 				nodeType = elem.nodeType;
-				if (nodeType === 3 && $string.trim(elem.nodeValue) != '')
+				if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
 				{
 					rtext += elem.nodeValue.replace(Qatrix.rbline, '') + "\n";
 					preblock = true;
@@ -793,7 +793,7 @@ var Qatrix = {
 			for (css in properties)
 			{
 				css_name[css] = $string.camelCase(css);
-				if (properties[css].from != null)
+				if (properties[css].from !== undefined)
 				{
 					css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
 					unit[css] = $css.unit(css, properties[css].to);
@@ -860,7 +860,7 @@ var Qatrix = {
 		for (css in properties)
 		{
 			css_name.push(css === 'opacity' ? 'filter' : $string.camelCase(css));
-			if (properties[css].from != null)
+			if (properties[css].from !== undefined)
 			{
 				property_value = properties[css].to;
 				css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
@@ -962,14 +962,14 @@ var Qatrix = {
 		set: function (key, value, expires)
 		{
 			var today = new Date(),
-				expires_date;
+				expires_date = '';
 			today.setTime(today.getTime());
 			if (expires)
 			{
-				expires = expires * 86400000;
+				expires = new Date(today.getTime() + expires * 86400000);
+				expires_date = ';expires=' + expires.toGMTString();
 			}
-			expires_date = new Date(today.getTime() + (expires));
-			return document.cookie = key + '=' + encodeURIComponent(value) + ((expires) ? ';expires=' + expires_date.toGMTString() : '') + '; path=/';
+			return document.cookie = key + '=' + encodeURIComponent(value) + expires_date + ';path=/';
 		},
 		remove: function ()
 		{
@@ -1061,50 +1061,48 @@ var Qatrix = {
 			url = undefined;
 		}
 		options = options || {};
-		var request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
+		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
 			type = options.type || 'POST',
-			response, url;
-		if (request)
+			url = url || options.url,
+			response;
+		request.open(type, url, true);
+		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+		if (options.header)
 		{
-			url = url || options.url;
-			request.open(type, url, true);
-			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-			if (options.header)
+			$each(options.header, function (key, value)
 			{
-				$each(options.header, function (key, value)
-				{
-					request.setRequestHeader(key, value);
-				});
-			}
-			if (options.data)
-			{
-				$each(options.data, function (key, value)
-				{
-					param.push($url(key) + '=' + $url(value));
-				});
-			}
-			request.send(param.join('&').replace(/%20/g, '+'));
-			request.onreadystatechange = function ()
-			{
-				if (request.readyState === 4 && request.status === 200 && options.success)
-				{
-					data = request.responseText;
-					options.success(data !== '' && $json.isJSON(data) ? $json.decode(data) : data);
-				}
-				else
-				{
-					if (options.error)
-					{
-						options.error.call();
-					}
-				}
-			};
+				request.setRequestHeader(key, value);
+			});
 		}
+		if (options.data)
+		{
+			$each(options.data, function (key, value)
+			{
+				param.push($url(key) + '=' + $url(value));
+			});
+		}
+		request.send(param.join('&').replace(/%20/g, '+'));
+		request.onreadystatechange = function ()
+		{
+			if (request.readyState === 4 && request.status === 200 && options.success)
+			{
+				data = request.responseText;
+				options.success(data !== '' && $json.isJSON(data) ? $json.decode(data) : data);
+			}
+			else
+			{
+				if (options.error)
+				{
+					options.error.call();
+				}
+			}
+		};
 	},
 	$loadscript: function (src)
 	{
-		return $before(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
+		var doc = document;
+		return $prepend(doc.getElementsByTagName('head')[0] || doc.head || doc.documentElement, $new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
