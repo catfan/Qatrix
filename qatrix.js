@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.6
+    Qatrix JavaScript v0.9.7
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
@@ -8,23 +8,22 @@
 
 (function () {
 
-var Qatrix = {
-	version: '0.9.6',
-
-	rbline: /\n+/g,
-	rbrace: /^(?:\{.*\}|\[.*\])$/,
-	rcamelCase: /-([a-z])/ig,
-	rdigit: /\d/,
-	rline: /\r\n/g,
-	rnum: /[\-\+0-9\.]/ig,
-	rspace: /\s+/,
-	rtrim: /(^\s*)|(\s*$)/g,
-	rvalidchars: /^[\],:{}\s]*$/,
-	rvalidescape: /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-	rvalidtokens: /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-	rvalidbraces: /(?:^|:|,)(?:\s*\[)+/g,
-
-	nodeManip: function (elem, node)
+var version = '0.9.7',
+	
+	rbline = /\n+/g,
+	rbrace = /^(?:\{.*\}|\[.*\])$/,
+	rcamelCase = /-([a-z])/ig,
+	rdigit = /\d/,
+	rline = /\r\n/g,
+	rnum = /[\-\+0-9\.]/ig,
+	rspace = /\s+/,
+	rtrim = /(^\s*)|(\s*$)/g,
+	rvalidchars = /^[\],:{}\s]*$/,
+	rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
+	rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
+	
+	nodeManip = function (elem, node)
 	{
 		var type = typeof node;
 		if (type === 'string')
@@ -52,6 +51,7 @@ var Qatrix = {
 
 		return node;
 	},
+	Qatrix = {
 	$: function (id)
 	{
 		// Qatrix just returns getElementById directly without additional process for highest performance
@@ -250,7 +250,7 @@ var Qatrix = {
 	$string: {
 		camelCase: function (string)
 		{
-			return string.replace('-ms-', 'ms-').replace(Qatrix.rcamelCase, function (match, letter)
+			return string.replace('-ms-', 'ms-').replace(rcamelCase, function (match, letter)
 			{
 				return (letter + '').toUpperCase();
 			});
@@ -281,7 +281,7 @@ var Qatrix = {
 		}:
 		function (string)
 		{
-			return string.replace(Qatrix.rtrim, '');
+			return string.replace(rtrim, '');
 		}
 	},
 	$attr: {
@@ -303,13 +303,13 @@ var Qatrix = {
 		{
 			var value = $attr.get(elem, 'data-' + name);
 			return value === "true" ? true :
-						value === "false" ? false :
-						value === "null" ? '' :
-						value === null ? '' :
-						value === '' ? '' :
-						!isNaN(parseFloat(value)) && isFinite(value) ? +value :
-						Qatrix.rbrace.test(value) ? $json.decode(value) :
-						value;
+				value === "false" ? false :
+				value === "null" ? '' :
+				value === null ? '' :
+				value === '' ? '' :
+				!isNaN(parseFloat(value)) && isFinite(value) ? +value :
+				rbrace.test(value) ? $json.decode(value) :
+				value;
 		},
 		set: function (elem, name, value)
 		{
@@ -476,7 +476,7 @@ var Qatrix = {
 		},
 		metaKey: function (event)
 		{
-			return event.metaKey === undefined ? event.ctrlKey : event.metaKey;
+			return event.metaKey || event.ctrlKey;
 		},
 		target: function (event)
 		{
@@ -544,7 +544,7 @@ var Qatrix = {
 			{
 				return '';
 			}
-			var unit = value.toString().replace(Qatrix.rnum, '');
+			var unit = value.toString().replace(rnum, '');
 			return unit === '' ? 'px' : unit;
 		},
 		fix: function (name, value)
@@ -625,19 +625,19 @@ var Qatrix = {
 	},
 	$append: function (elem, node)
 	{
-		return elem.appendChild(Qatrix.nodeManip(elem, node));
+		return elem.appendChild(nodeManip(elem, node));
 	},
 	$prepend: function (elem, node)
 	{
-		return elem.firstChild ? elem.insertBefore(Qatrix.nodeManip(elem, node), elem.firstChild) : elem.appendChild(Qatrix.nodeManip(elem, node));
+		return elem.firstChild ? elem.insertBefore(nodeManip(elem, node), elem.firstChild) : elem.appendChild(nodeManip(elem, node));
 	},
 	$before: function (elem, node)
 	{
-		return elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem);
+		return elem.parentNode.insertBefore(nodeManip(elem, node), elem);
 	},
 	$after: function (elem, node)
 	{
-		return elem.nextSibling ? elem.parentNode.insertBefore(Qatrix.nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(Qatrix.nodeManip(elem, node));
+		return elem.nextSibling ? elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(nodeManip(elem, node));
 	},
 	$remove: function (elem)
 	{
@@ -675,25 +675,25 @@ var Qatrix = {
 		{
 			var rtext = '',
 				textContent = elem.textContent,
-				nodeType, block, preblock;
-			for (elem = elem.firstChild; elem; elem = elem.nextSibling)
+				nodeType;
+			// If the content of elem is text only
+			if ( (textContent || elem.innerText) === elem.innerHTML)
 			{
-				nodeType = elem.nodeType;
-				if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
+				rtext = textContent ? $string.trim(elem.textContent.replace(rbline, '')) : elem.innerText.replace(rline, '');
+			}
+			else
+			{
+				for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 				{
-					rtext += elem.nodeValue.replace(Qatrix.rbline, '') + "\n";
-					preblock = true;
-				}
-				if (nodeType === 1 || nodeType === 2)
-				{
-					block = $style.get(elem, 'display') === 'block';
-					if (block && !preblock)
+					nodeType = elem.nodeType;
+					if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
 					{
-						rtext += "\n";
+						rtext += elem.nodeValue.replace(rbline, '') + "\n";
 					}
-					rtext += textContent ? $string.trim(elem.textContent.replace(Qatrix.rbline, '')) : elem.innerText.replace(Qatrix.rline, '');
-					rtext += block ? "\n" : '';
-					preblock = block;
+					if (nodeType === 1 || nodeType === 2)
+					{
+						rtext += $text(elem) + ($style.get(elem, 'display') === 'block' ? "\n" : '');
+					}
 				}
 			}
 			return rtext;
@@ -714,7 +714,7 @@ var Qatrix = {
 			{
 				var ori = elem.className,
 					nclass = [];
-				$each(name.split(Qatrix.rspace), function (i, item)
+				$each(name.split(rspace), function (i, item)
 				{
 					if (!new RegExp('\\b(' + item + ')\\b').test(ori))
 					{
@@ -732,11 +732,11 @@ var Qatrix = {
 		},
 		has: function (elem, name)
 		{
-			return new RegExp('\\b(' + name.split(Qatrix.rspace).join('|') + ')\\b').test(elem.className);
+			return new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b').test(elem.className);
 		},
 		remove: function (elem, name)
 		{
-			elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(Qatrix.rspace).join('|') + ')\\b', 'g'), '').split(Qatrix.rspace).join(' ')) : '';
+			elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '').split(rspace).join(' ')) : '';
 			return elem;
 		}
 	},
@@ -776,9 +776,9 @@ var Qatrix = {
 	{
 		var style = document.documentElement.style,
 			prefix_name = style.webkitTransition === '' ? 'Webkit' :
-									style.MozTransition === '' ? 'Moz' :
-									style.OTransition === '' ? 'O' :
-									style.MsTransition === '' ? 'ms' : '',
+				style.MozTransition === '' ? 'Moz' :
+				style.OTransition === '' ? 'O' :
+				style.MsTransition === '' ? 'ms' : '',
 			transition_name = prefix_name + 'Transition',
 			transform_name = prefix_name + 'Transform';
 		return function (elem, properties, duration, callback)
@@ -1050,7 +1050,7 @@ var Qatrix = {
 		},
 		isJSON: function (string)
 		{
-			return typeof string === 'string' && $string.trim(string) !== '' ? Qatrix.rvalidchars.test(string.replace(Qatrix.rvalidescape, '@').replace(Qatrix.rvalidtokens, ']').replace(Qatrix.rvalidbraces, '')) : false;
+			return typeof string === 'string' && $string.trim(string) !== '' ? rvalidchars.test(string.replace(rvalidescape, '@').replace(rvalidtokens, ']').replace(rvalidbraces, '')) : false;
 		}
 	},
 	$ajax: function (url, options)
@@ -1144,10 +1144,7 @@ var Qatrix = {
 // Expose Qatrix functions to global
 for (var fn in Qatrix)
 {
-	if (fn.indexOf('$') === 0)
-	{
-		window[fn] = Qatrix[fn];
-	}
+	window[fn] = Qatrix[fn];
 }
 window.Qatrix = Qatrix;
 
