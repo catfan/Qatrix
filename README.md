@@ -23,6 +23,7 @@ Only 4.7KB compressed and gzipped file size with 60+ functions, including hardwa
 Quick start
 -----------
 **Get element by Qatrix selectors**
+
 `$(id)`
 
 `$id(id, callback)`
