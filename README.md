@@ -24,10 +24,15 @@ Quick start
 -----------
 **Get element by Qatrix selectors**
 `$(id)`
+
 `$id(id, callback)`
+
 `$class(element, class, callback)`
+
 `$tag(element, tag, callback)`
+
 `$dom(dom, callback)`
+
 `$select(selector, callback)`
 
 **Use Qatrix functions**
