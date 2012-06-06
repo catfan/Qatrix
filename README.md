@@ -20,6 +20,33 @@ The name of functions on Qatrix are simple, user-friendly and familiar with the 
 ### Incredible size ###
 Only 4.7KB compressed and gzipped file size with 60+ functions, including hardware accelerated animation, DOM, AJAX, various selectors, cookie, event handle, local storage, cache system functions, and so on, enough for most common web development needs. Load powerful script instantly without expectation.
 
+Quick start
+-----------
+**Get element by Qatrix selectors**
+`$(id)`
+`$id(id, callback)`
+`$class(element, class, callback)`
+`$tag(element, tag, callback)`
+`$dom(dom, callback)`
+`$select(selector, callback)`
+
+**Use Qatrix functions**
+```
+$animate($('id'), {
+	'width': {
+		from: 300,
+		to: 10
+	},
+	'opacity': {
+		from: 1,
+		to: 0.5
+	}
+}
+
+$style.set($('id'), 'width', '400px');
+$data.get($('id), 'city');
+```
+
 License
 --------
 The Qatrix JavaScript is under MIT license. You can freely to use or distribute for your project as long as declaring the original copyright information.
