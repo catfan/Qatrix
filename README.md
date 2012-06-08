@@ -47,7 +47,7 @@ $animate($('id'), {
 		from: 1,
 		to: 0.5
 	}
-}
+});
 
 $style.set($('id'), 'width', '400px');
 $data.get($('id), 'city');
