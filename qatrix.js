@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.7
+    Qatrix JavaScript v0.9.8.pre
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function () {
 
-var version = '0.9.7',
+var version = '0.9.8.pre',
 	
 	rbline = /\n+/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -381,7 +381,7 @@ var version = '0.9.7',
 	{
 		set: function (name, value)
 		{
-			var value = typeof value === 'object' ? $json.encode(value) : value;
+			value = typeof value === 'object' ? $json.encode(value) : value;
 			$data.set(Qatrix.storage, name, value);
 			Qatrix.storage.save('Qstorage');
 		},
@@ -617,8 +617,8 @@ var version = '0.9.7',
 			doc_elem = document.documentElement,
 			box = elem.getBoundingClientRect();
 		return {
-			top: box.top + (window.scrollY || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
-			left: box.left + (window.scrollX || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
+			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
+			left: box.left + (window.scrollX || body.parentNode.scrollLeft || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
 			width: elem.offsetWidth,
 			height: elem.offsetHeight
 		};
@@ -1064,8 +1064,8 @@ var version = '0.9.7',
 		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
 			type = options.type || 'POST',
-			url = url || options.url,
 			response;
+		url = url || options.url;
 		request.open(type, url, true);
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 		if (options.header)
