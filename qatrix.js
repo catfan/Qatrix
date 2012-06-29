@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.8.pre
+    Qatrix JavaScript v0.9.8
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function () {
 
-var version = '0.9.8.pre',
+var version = '0.9.8',
 	
 	rbline = /\n+/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -22,6 +22,17 @@ var version = '0.9.8.pre',
 	rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
 	rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
+	
+	// For DOM ready
+	readyList = [],
+	ready = function ()
+	{
+		$each(readyList, function (i, callback)
+		{
+			callback();
+		});
+		document.removeEventListener('DOMContentLoaded', ready, false);
+	},
 	
 	nodeManip = function (elem, node)
 	{
@@ -500,11 +511,12 @@ var version = '0.9.8.pre',
 		}
 		if (document.addEventListener)
 		{
-			document.addEventListener('DOMContentLoaded', callback, false);
+			readyList.push(callback);
+			document.addEventListener('DOMContentLoaded', ready, false);
 			return;
 		}
 		// Hack IE DOM for ready event
-		function domready()
+		var domready = function ()
 		{
 			try
 			{
@@ -516,7 +528,7 @@ var version = '0.9.8.pre',
 				return;
 			}
 			callback();
-		}
+		};
 		domready();
 	},
 	$css: {
@@ -945,31 +957,30 @@ var version = '0.9.8.pre',
 	$cookie: {
 		get: function (key)
 		{
-			var tempArr = document.cookie.split('; '),
+			var cookies = document.cookie.split('; '),
 				i = 0,
-				l = tempArr.length,
-				temp;
+				l = cookies.length,
+				temp, value;
 			for (; i < l; i++)
 			{
-				temp = tempArr[i].split('=');
+				temp = cookies[i].split('=');
 				if (temp[0] === key)
 				{
-					return decodeURIComponent(temp[1]);
+					value = decodeURIComponent(temp[1]);
+					return $json.isJSON(value) ? $json.decode(value) : value;
 				}
 			}
 			return null;
 		},
 		set: function (key, value, expires)
 		{
-			var today = new Date(),
-				expires_date = '';
+			value = typeof value === 'object' ? $json.encode(value) : value;
+			
+			var today = new Date();
 			today.setTime(today.getTime());
-			if (expires)
-			{
-				expires = new Date(today.getTime() + expires * 86400000);
-				expires_date = ';expires=' + expires.toGMTString();
-			}
-			return document.cookie = key + '=' + encodeURIComponent(value) + expires_date + ';path=/';
+			expires = expires ? ';expires=' + new Date(today.getTime() + expires * 86400000).toGMTString() : '';
+			
+			return document.cookie = key + '=' + encodeURIComponent(value) + expires + ';path=/';
 		},
 		remove: function ()
 		{
