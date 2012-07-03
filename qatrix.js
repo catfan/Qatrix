@@ -1,14 +1,14 @@
 /*
-    Qatrix JavaScript v0.9.8
+    Qatrix JavaScript v0.9.9pre
 
     Copyright (c) 2012, The Qatrix project, Angel Lai
     The Qatrix project is under MIT license.
     For details, see the Qatrix website: http://qatrix.com
 */
 
-(function () {
+(function (window, document, undefined) {
 
-var version = '0.9.8',
+var version = '0.9.9pre',
 	
 	rbline = /\n+/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -22,7 +22,7 @@ var version = '0.9.8',
 	rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
 	rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
-	
+		
 	// For DOM ready
 	readyList = [],
 	ready = function ()
@@ -62,6 +62,19 @@ var version = '0.9.8',
 
 		return node;
 	},
+	
+	mapcall = function (match, callback)
+	{
+		if (callback && match.length > 0)
+		{
+			$each(match, function (i, item)
+			{
+				callback(item);
+			});
+		}
+		return match;
+	},
+	
 	Qatrix = {
 	$: function (id)
 	{
@@ -110,50 +123,24 @@ var version = '0.9.8',
 				match.push(elem);
 			}
 		});
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(match, callback);
 	},
 	$dom: function (dom, callback)
 	{
 		if (callback)
 		{
-			dom.length ? $each(dom, function (i, item)
-			{
-				callback(item);
-			}) : callback(dom);
+			dom.length ? mapcall(match, callback) : callback(dom);
 		}
 		return dom;
 	},
 	$tag: function (elem, name, callback)
 	{
-		var match = elem.getElementsByTagName(name);
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(elem.getElementsByTagName(name), callback);
 	},
 	$class: document.getElementsByClassName ?
 	function (elem, className, callback)
 	{
-		var match = elem.getElementsByClassName(className);
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(elem.getElementsByClassName(className), callback);
 	}:
 	function (elem, className, callback)
 	{
@@ -166,27 +153,12 @@ var version = '0.9.8',
 				match.push(item);
 			}
 		});
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(match, callback);
 	},
 	$select: document.querySelectorAll ?
 	function (selector, callback)
 	{
-		var match = document.querySelectorAll(selector);
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(document.querySelectorAll(selector), callback);
 	}:
 	// Hack native CSS selector quering matched element for IE6/7
 	function (selector, callback)
@@ -202,14 +174,7 @@ var version = '0.9.8',
 			}
 		});
 		style.cssText = '';
-		if (callback && match.length > 0)
-		{
-			$each(match, function (i, item)
-			{
-				callback(item);
-			});
-		}
-		return match;
+		return mapcall(match, callback);
 	},
 	$new: function (tag, properties)
 	{
@@ -689,7 +654,7 @@ var version = '0.9.8',
 				textContent = elem.textContent,
 				nodeType;
 			// If the content of elem is text only
-			if ( (textContent || elem.innerText) === elem.innerHTML)
+			if ((textContent || elem.innerText) === elem.innerHTML)
 			{
 				rtext = textContent ? $string.trim(elem.textContent.replace(rbline, '')) : elem.innerText.replace(rline, '');
 			}
@@ -704,7 +669,7 @@ var version = '0.9.8',
 					}
 					if (nodeType === 1 || nodeType === 2)
 					{
-						rtext += $text(elem) + ($style.get(elem, 'display') === 'block' ? "\n" : '');
+						rtext += $text(elem) + ($style.get(elem, 'display') === 'block' || elem.tagName.toLowerCase() === 'br' ? "\n" : '');
 					}
 				}
 			}
@@ -777,20 +742,20 @@ var version = '0.9.8',
 		// Use CSS3 native transition for animation as possible
 		var style = document.documentElement.style;
 		return (
-			style.webkitTransition === '' ||
-			style.MozTransition === '' ||
-			style.OTransition === '' ||
-			style.MsTransition === '' ||
-			style.transition === ''
+			style.webkitTransition !== undefined ||
+			style.MozTransition !== undefined ||
+			style.OTransition !== undefined ||
+			style.MsTransition !== undefined ||
+			style.transition !== undefined
 		);
 	}()) ?
 	(function ()
 	{
 		var style = document.documentElement.style,
-			prefix_name = style.webkitTransition === '' ? 'Webkit' :
-				style.MozTransition === '' ? 'Moz' :
-				style.OTransition === '' ? 'O' :
-				style.MsTransition === '' ? 'ms' : '',
+			prefix_name = style.webkitTransition !== undefined ? 'Webkit' :
+				style.MozTransition !== undefined ? 'Moz' :
+				style.OTransition !== undefined ? 'O' :
+				style.MsTransition !== undefined ? 'ms' : '',
 			transition_name = prefix_name + 'Transition',
 			transform_name = prefix_name + 'Transform';
 		return function (elem, properties, duration, callback)
@@ -1112,8 +1077,7 @@ var version = '0.9.8',
 	},
 	$loadscript: function (src)
 	{
-		var doc = document;
-		return $prepend(doc.getElementsByTagName('head')[0] || doc.head || doc.documentElement, $new('script', {
+		return $prepend(document.getElementsByTagName('head')[0] || document.head || document.documentElement, $new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
@@ -1177,4 +1141,5 @@ $ready(function ()
 	}
 });
 
-})();
+// Create a shortcut for compression
+})(window, document);
