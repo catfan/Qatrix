@@ -766,7 +766,6 @@ var version = '0.9.9pre',
 				css_style = [],
 				style = elem.style,
 				css, offset;
-			duration = duration || '300';
 			for (css in properties)
 			{
 				css_name[css] = $string.camelCase(css);
@@ -814,7 +813,7 @@ var version = '0.9.9pre',
 				{
 					callback(elem);
 				}
-			}, duration);
+			}, duration || '300');
 
 			return elem;
 		}
@@ -901,23 +900,21 @@ var version = '0.9.9pre',
 	},
 	$fadeout: function (elem, duration, callback)
 	{
-		duration = duration || '500';
 		return $animate(elem, {
 			'opacity': {
 				from: 1,
 				to: 0
 			}
-		}, duration, callback);
+		}, duration || '500', callback);
 	},
 	$fadein: function (elem, duration, callback)
 	{
-		duration = duration || '500';
 		return $animate(elem, {
 			'opacity': {
 				from: 0,
 				to: 1
 			}
-		}, duration, callback);
+		}, duration || '500', callback);
 	},
 	$cookie: {
 		get: function (key)
@@ -945,7 +942,7 @@ var version = '0.9.9pre',
 			today.setTime(today.getTime());
 			expires = expires ? ';expires=' + new Date(today.getTime() + expires * 86400000).toGMTString() : '';
 			
-			return document.cookie = key + '=' + encodeURIComponent(value) + expires + ';path=/';
+			return document.cookie = key + '=' + $url(value) + expires + ';path=/';
 		},
 		remove: function ()
 		{
@@ -1039,10 +1036,8 @@ var version = '0.9.9pre',
 		options = options || {};
 		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
-			type = options.type || 'POST',
 			response;
-		url = url || options.url;
-		request.open(type, url, true);
+		request.open(options.type || 'POST', url || options.url, true);
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 		if (options.header)
 		{
