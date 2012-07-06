@@ -289,6 +289,7 @@ var version = '0.9.9pre',
 		},
 		set: function (elem, name, value)
 		{
+			value = typeof value === 'object' ? $json.encode(value) : value;
 			typeof name === 'object' ? $each(name, function (key, value)
 			{
 				$attr.set(elem, 'data-' + key, value);
@@ -559,7 +560,7 @@ var version = '0.9.9pre',
 			}
 			return false;
 		},
-		set: document.documentElement.style.opacity === '' ?
+		set: document.documentElement.style.opacity === undefined ?
 		function (elem, name, value)
 		{
 			elem.style[name] = value;
