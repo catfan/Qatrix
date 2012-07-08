@@ -426,20 +426,16 @@ var version = '0.9.9pre',
 			{
 				return function (event)
 				{
-					function is_child(elem_parent, elem_child)
-					{
-						if (elem_parent === elem_child)
-						{
-							return false;
-						}
-						while (elem_child && elem_child !== elem_parent)
-						{
-							elem_child = elem_child.parentNode;
-						}
-						return elem_child === elem_parent;
-					}
 					var target = event.relatedTarget;
-					if (this === target || is_child(this, target))
+					if (this === target)
+					{
+						return;
+					}
+					while (target && target !== this)
+					{
+						target = target.parentNode;
+					}
+					if (target === this)
 					{
 						return;
 					}
