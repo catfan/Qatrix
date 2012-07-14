@@ -10,7 +10,7 @@
 
 var version = '0.9.9pre',
 	
-	rbline = /\n+/g,
+	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
 	rcamelCase = /-([a-z])/ig,
 	rdigit = /\d/,
@@ -662,7 +662,7 @@ var version = '0.9.9pre',
 					nodeType = elem.nodeType;
 					if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
 					{
-						rtext += elem.nodeValue.replace(rbline, '') + "\n";
+						rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
 					}
 					if (nodeType === 1 || nodeType === 2)
 					{
@@ -926,7 +926,7 @@ var version = '0.9.9pre',
 				if (temp[0] === key)
 				{
 					value = decodeURIComponent(temp[1]);
-					return $json.isJSON(value) ? $json.decode(value) : value;
+					return $json.isJSON(value) ? $json.decode(value) : value.toString();
 				}
 			}
 			return null;
@@ -1113,6 +1113,8 @@ for (var fn in Qatrix)
 {
 	window[fn] = Qatrix[fn];
 }
+
+Qatrix.version = version;
 window.Qatrix = Qatrix;
 
 $ready(function ()
