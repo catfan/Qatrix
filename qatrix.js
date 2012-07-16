@@ -129,7 +129,7 @@ var version = '0.9.9pre',
 	{
 		if (callback)
 		{
-			dom.length ? mapcall(match, callback) : callback(dom);
+			dom.length ? mapcall(dom, callback) : callback(dom);
 		}
 		return dom;
 	},
