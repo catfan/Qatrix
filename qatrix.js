@@ -377,6 +377,14 @@ var version = '0.9.9pre',
 	$event: {
 		add: function (elem, type, handler)
 		{
+			if (typeof type === 'object')
+			{
+				$each(type, function (type, handler)
+				{
+					$event.add(elem, type, handler);
+				});
+				return elem;
+			}
 			if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
 			{
 				return false;
