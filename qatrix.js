@@ -1,14 +1,14 @@
 /*
-    Qatrix JavaScript v0.9.9pre
+    Qatrix JavaScript v0.9.9
 
-    Copyright (c) 2012, The Qatrix project, Angel Lai
+    Copyright (c) 2012, Angel Lai
     The Qatrix project is under MIT license.
     For details, see the Qatrix website: http://qatrix.com
 */
 
 (function (window, document, undefined) {
 
-var version = '0.9.9pre',
+var version = '0.9.9',
 	
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
