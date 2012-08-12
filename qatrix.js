@@ -564,7 +564,7 @@ var version = '0.9.9',
 			}
 			return false;
 		},
-		set: document.documentElement.style.opacity === undefined ?
+		set: document.documentElement.style.opacity !== undefined ?
 		function (elem, name, value)
 		{
 			elem.style[name] = value;
