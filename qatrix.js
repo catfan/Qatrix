@@ -1,5 +1,5 @@
 /*
-    Qatrix JavaScript v0.9.9
+    Qatrix JavaScript v1.0pre
 
     Copyright (c) 2012, Angel Lai
     The Qatrix project is under MIT license.
@@ -8,8 +8,8 @@
 
 (function (window, document, undefined) {
 
-var version = '0.9.9',
-	
+var version = '1.0pre',
+
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
 	rcamelCase = /-([a-z])/ig,
@@ -19,10 +19,10 @@ var version = '0.9.9',
 	rspace = /\s+/,
 	rtrim = /(^\s*)|(\s*$)/g,
 	rvalidchars = /^[\],:{}\s]*$/,
-	rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-	rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+	rvalidescape = /\\(?:["\\\/bfnrt]|u[\da-fA-F]{4})/g,
+	rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d\d*\.|)\d+(?:[eE][\-+]?\d+|)/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
-		
+
 	// For DOM ready
 	readyList = [],
 	ready = function ()
@@ -1041,7 +1041,30 @@ var version = '0.9.9',
 		options = options || {};
 		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
-			response;
+			response,
+			add = function (prefix, data)
+			{
+				if (typeof data === 'object')
+				{
+					var rdata = [];
+					$each(data, function (key, value)
+					{
+						if (typeof value === 'object')
+						{
+							rdata.push(add(prefix + '[' + key + ']', value));
+						}
+						else
+						{
+							rdata.push(prefix + '[' + $url(key) + ']=' + value);
+						}
+					});
+					return rdata.join('&');
+				}
+				else
+				{
+					return $url(prefix) + '=' + $url(data);
+				}
+			};
 		request.open(options.type || 'POST', url || options.url, true);
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 		if (options.header)
@@ -1055,7 +1078,7 @@ var version = '0.9.9',
 		{
 			$each(options.data, function (key, value)
 			{
-				param.push($url(key) + '=' + $url(value));
+				param.push(add(key, value));
 			});
 		}
 		request.send(param.join('&').replace(/%20/g, '+'));
