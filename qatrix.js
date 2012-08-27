@@ -770,6 +770,7 @@ var version = '1.0pre',
 				unit = [],
 				css_style = [],
 				style = elem.style,
+				duration = duration || 300,
 				css, offset;
 			for (css in properties)
 			{
@@ -818,7 +819,7 @@ var version = '1.0pre',
 				{
 					callback(elem);
 				}
-			}, duration || '300');
+			}, duration);
 
 			return elem;
 		}
@@ -836,7 +837,7 @@ var version = '1.0pre',
 			css_unit = [],
 			css_style = [],
 			property_value, css, offset, timer;
-		duration = duration || '300';
+		duration = duration || 300;
 
 		for (css in properties)
 		{
