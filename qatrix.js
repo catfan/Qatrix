@@ -23,6 +23,9 @@ var version = '1.0pre',
 	rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d\d*\.|)\d+(?:[eE][\-+]?\d+|)/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
 
+	animDisplay = ['height', 'width', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingTop', 'paddingLeft', 'paddingBottom', 'paddingRight'],
+	animDisplayProp = animDisplay.concat(['margin', 'padding', 'opacity']),
+	
 	// For DOM ready
 	readyList = [],
 	ready = function ()
@@ -34,6 +37,7 @@ var version = '1.0pre',
 		document.removeEventListener('DOMContentLoaded', ready, false);
 	},
 	
+	// For $append, $prepend, $before, $after
 	nodeManip = function (elem, node)
 	{
 		var type = typeof node;
@@ -63,6 +67,7 @@ var version = '1.0pre',
 		return node;
 	},
 	
+	// For selector callback
 	mapcall = function (match, callback)
 	{
 		if (callback && match.length > 0)
@@ -74,7 +79,91 @@ var version = '1.0pre',
 		}
 		return match;
 	},
-	
+
+	// For $show and $hide
+	displayElem = function (elem, type, duration, callback)
+	{
+		var prop = {},
+			show = type === 'show',
+			display, temp;
+		if (show)
+		{
+			display = $data.get(elem, '_display');
+			if (!display)
+			{
+				temp = $append(document.body, $new(elem.nodeName));
+				display = $style.get(temp, 'display');
+				$remove(temp);
+				$data.set(elem, '_display', display);
+			}
+			elem.style.display = display;
+		}
+		else
+		{
+			display = 'none';
+		}
+
+		if (duration)
+		{
+			if (show)
+			{
+				prop.opacity = {
+					from: 0,
+					to: 1
+				};
+			}
+			$each(animDisplay, function (i, css)
+			{
+				prop[css] = show ? {
+					from: 0,
+					to: $style.get(elem, css)
+				} : 0;
+			});
+			$animate(elem, prop, duration, function ()
+			{
+				$each(animDisplayProp, function (i, css)
+				{
+					elem.style.removeProperty(css);
+				});
+				elem.style.display = display;
+
+				if (callback)
+				{
+					callback();
+				}
+			});
+		}
+		else
+		{
+			elem.style.display = display;
+		}
+	},
+
+	// For $ajax parameter
+	addParam = function (prefix, data)
+	{
+		if (typeof data === 'object')
+		{
+			var rdata = [];
+			$each(data, function (key, value)
+			{
+				if (typeof value === 'object')
+				{
+					rdata.push(addParam(prefix + '[' + key + ']', value));
+				}
+				else
+				{
+					rdata.push(prefix + '[' + $url(key) + ']=' + value);
+				}
+			});
+			return rdata.join('&');
+		}
+		else
+		{
+			return $url(prefix) + '=' + $url(data);
+		}
+	},
+
 	Qatrix = {
 	$: function (id)
 	{
@@ -722,25 +811,24 @@ var version = '1.0pre',
 			return elem;
 		}
 	},
-	$hide: function (elem)
+	$hide: function (elem, duration, callback)
 	{
-		$each(arguments, function (i, argument)
-		{
-			typeof argument === 'string' ? $(argument).style.display = 'none' : typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
-			{
-				elem.style.display = 'none';
-			}) : argument.style.display = 'none';
-		});
+		displayElem(elem, 'hide', duration, callback);
 	},
-	$show: function (elem)
+	$show: function (elem, duration, callback)
 	{
-		$each(arguments, function (i, argument)
+		displayElem(elem, 'show', duration, callback);
+	},
+	$toggle: function (elem, duration, callback)
+	{
+		if ($style.get(elem, 'display') == 'none')
 		{
-			typeof argument === 'string' ? $(argument).style.display = 'block' : typeof argument === 'object' && argument.length ? $each(argument, function (i, elem)
-			{
-				elem.style.display = 'block';
-			}) : argument.style.display = 'block';
-		});
+			$show(elem, duration, callback);
+		}
+		else
+		{
+			$hide(elem, duration, callback);
+		}
 	},
 	$animate: (function ()
 	{
@@ -770,13 +858,14 @@ var version = '1.0pre',
 				unit = [],
 				css_style = [],
 				style = elem.style,
-				duration = duration || 300,
 				css, offset;
+			duration = duration || 300;
 			for (css in properties)
 			{
 				css_name[css] = $string.camelCase(css);
 				if (properties[css].from !== undefined)
 				{
+					properties[css].to = properties[css].to || 0;
 					css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
 					unit[css] = $css.unit(css, properties[css].to);
 					$style.set(elem, css_name[css], parseInt(properties[css].from) + unit[css]);
@@ -911,7 +1000,7 @@ var version = '1.0pre',
 				from: 1,
 				to: 0
 			}
-		}, duration || '500', callback);
+		}, duration || 500, callback);
 	},
 	$fadein: function (elem, duration, callback)
 	{
@@ -920,7 +1009,7 @@ var version = '1.0pre',
 				from: 0,
 				to: 1
 			}
-		}, duration || '500', callback);
+		}, duration || 500, callback);
 	},
 	$cookie: {
 		get: function (key)
@@ -942,12 +1031,12 @@ var version = '1.0pre',
 		},
 		set: function (key, value, expires)
 		{
-			value = typeof value === 'object' ? $json.encode(value) : value;
-			
 			var today = new Date();
 			today.setTime(today.getTime());
 			expires = expires ? ';expires=' + new Date(today.getTime() + expires * 86400000).toGMTString() : '';
-			
+
+			value = typeof value === 'object' ? $json.encode(value) : value;
+
 			return document.cookie = key + '=' + $url(value) + expires + ';path=/';
 		},
 		remove: function ()
@@ -1042,30 +1131,7 @@ var version = '1.0pre',
 		options = options || {};
 		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
 			param = [],
-			response,
-			add = function (prefix, data)
-			{
-				if (typeof data === 'object')
-				{
-					var rdata = [];
-					$each(data, function (key, value)
-					{
-						if (typeof value === 'object')
-						{
-							rdata.push(add(prefix + '[' + key + ']', value));
-						}
-						else
-						{
-							rdata.push(prefix + '[' + $url(key) + ']=' + value);
-						}
-					});
-					return rdata.join('&');
-				}
-				else
-				{
-					return $url(prefix) + '=' + $url(data);
-				}
-			};
+			response;
 		request.open(options.type || 'POST', url || options.url, true);
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 		if (options.header)
@@ -1079,7 +1145,7 @@ var version = '1.0pre',
 		{
 			$each(options.data, function (key, value)
 			{
-				param.push(add(key, value));
+				param.push(addParam(key, value));
 			});
 		}
 		request.send(param.join('&').replace(/%20/g, '+'));
