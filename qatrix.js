@@ -23,8 +23,8 @@ var version = '1.0pre',
 	rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d\d*\.|)\d+(?:[eE][\-+]?\d+|)/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
 
-	animDisplay = ['height', 'width', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingTop', 'paddingLeft', 'paddingBottom', 'paddingRight'],
-	animDisplayProp = animDisplay.concat(['margin', 'padding', 'opacity']),
+	animDisplay = ['height', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'],
+	animDisplayProp = animDisplay.concat(['opacity']),
 	
 	// For DOM ready
 	readyList = [],
@@ -893,10 +893,12 @@ var version = '1.0pre',
 				{
 					style[transform_name] = 'translateZ(0)';
 				}
+
 				$each(css_style, function (i, css)
 				{
 					style[css_name[css]] = css_value[css] + unit[css];
 				});
+
 			}, 15);
 
 			// Animation completed
