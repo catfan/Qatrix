@@ -506,11 +506,27 @@ var version = '1.0pre',
 		remove: document.removeEventListener ?
 		function (elem, type, handler)
 		{
+			if (typeof type === 'object')
+			{
+				$each(type, function (type, handler)
+				{
+					$event.remove(elem, type, handler);
+				});
+				return elem;
+			}
 			elem.removeEventListener(type, handler, false);
 			return elem;
 		}:
 		function (elem, type, handler)
 		{
+			if (typeof type === 'object')
+			{
+				$each(type, function (type, handler)
+				{
+					$event.remove(elem, type, handler);
+				});
+				return elem;
+			}
 			elem.detachEvent('on' + type, handler);
 			if (elem.removeAttribute)
 			{
