@@ -85,7 +85,7 @@ var version = '1.0pre',
 	{
 		var prop = {},
 			show = type === 'show',
-			display, temp;
+			display, temp, overflow;
 		if (show)
 		{
 			display = $data.get(elem, '_display');
@@ -105,6 +105,9 @@ var version = '1.0pre',
 
 		if (duration)
 		{
+			overflow = $style.get(elem, 'overflow');
+			elem.style.overflow = 'hidden';
+			
 			if (show)
 			{
 				prop.opacity = {
@@ -126,6 +129,7 @@ var version = '1.0pre',
 					elem.style.removeProperty(css);
 				});
 				elem.style.display = display;
+				elem.style.overflow = overflow;
 
 				if (callback)
 				{
@@ -1049,6 +1053,14 @@ var version = '1.0pre',
 		},
 		set: function (key, value, expires)
 		{
+			if (typeof key === 'object')
+			{
+				return $each(key, function (name, value)
+				{
+					$cookie.set(name, value, expires);
+				});
+			}
+
 			var today = new Date();
 			today.setTime(today.getTime());
 			expires = expires ? ';expires=' + new Date(today.getTime() + expires * 86400000).toGMTString() : '';
