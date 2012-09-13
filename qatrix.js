@@ -1055,8 +1055,10 @@ var version = '1.0pre',
 		{
 			if (typeof key === 'object')
 			{
+				expires = value;
 				return $each(key, function (name, value)
 				{
+
 					$cookie.set(name, value, expires);
 				});
 			}
