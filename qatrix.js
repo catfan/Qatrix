@@ -67,80 +67,95 @@ var version = '1.0pre',
 		return node;
 	},
 	
-	// For selector callback
+	// For map function callback
 	mapcall = function (match, callback)
 	{
-		if (callback && match.length > 0)
+		if (callback)
 		{
-			$each(match, function (i, item)
+			if (match.length)
 			{
-				callback(item);
-			});
+				$each(match, function (i, item)
+				{
+					callback(item);
+				});
+				return match;
+			}
+			else
+			{
+				return callback(match);
+			}
 		}
-		return match;
+		else
+		{
+			return match;
+		}
 	},
 
 	// For $show and $hide
 	displayElem = function (elem, type, duration, callback)
 	{
-		var prop = {},
-			show = type === 'show',
-			display, temp, overflow;
-		if (show)
+		return mapcall(elem, function (elem)
 		{
-			display = $data.get(elem, '_display');
-			if (!display)
-			{
-				temp = $append(document.body, $new(elem.nodeName));
-				display = $style.get(temp, 'display');
-				$remove(temp);
-				$data.set(elem, '_display', display);
-			}
-			elem.style.display = display;
-		}
-		else
-		{
-			display = 'none';
-		}
+			var prop = {},
+				show = type === 'show',
+				display, temp, overflow;
 
-		if (duration)
-		{
-			overflow = $style.get(elem, 'overflow');
-			elem.style.overflow = 'hidden';
-			
 			if (show)
 			{
-				prop.opacity = {
-					from: 0,
-					to: 1
-				};
-			}
-			$each(animDisplay, function (i, css)
-			{
-				prop[css] = show ? {
-					from: 0,
-					to: $style.get(elem, css)
-				} : 0;
-			});
-			$animate(elem, prop, duration, function ()
-			{
-				$each(animDisplayProp, function (i, css)
+				display = $data.get(elem, '_display');
+				if (!display)
 				{
-					elem.style.removeProperty(css);
-				});
-				elem.style.display = display;
-				elem.style.overflow = overflow;
-
-				if (callback)
-				{
-					callback();
+					temp = $append(document.body, $new(elem.nodeName));
+					display = $style.get(temp, 'display');
+					$remove(temp);
+					$data.set(elem, '_display', display);
 				}
-			});
-		}
-		else
-		{
-			elem.style.display = display;
-		}
+				elem.style.display = display;
+			}
+			else
+			{
+				display = 'none';
+			}
+
+			if (duration)
+			{
+				overflow = $style.get(elem, 'overflow');
+				elem.style.overflow = 'hidden';
+				
+				if (show)
+				{
+					prop.opacity = {
+						from: 0,
+						to: 1
+					};
+				}
+				$each(animDisplay, function (i, css)
+				{
+					prop[css] = show ? {
+						from: 0,
+						to: $style.get(elem, css)
+					} : 0;
+				});
+				$animate(elem, prop, duration, function ()
+				{
+					$each(animDisplayProp, function (i, css)
+					{
+						elem.style.removeProperty(css);
+					});
+					elem.style.display = display;
+					elem.style.overflow = overflow;
+
+					if (callback)
+					{
+						callback();
+					}
+				});
+			}
+			else
+			{
+				elem.style.display = display;
+			}
+		});
 	},
 
 	// For $ajax parameter
@@ -360,11 +375,17 @@ var version = '1.0pre',
 		},
 		set: function (elem, name, value)
 		{
-			return elem.setAttribute(name, value);
+			return mapcall(elem, function (elem)
+			{
+				elem.setAttribute(name, value);
+			});
 		},
 		remove: function (elem, name)
 		{
-			return elem.removeAttribute(name);
+			return mapcall(elem, function (elem)
+			{
+				elem.removeAttribute(name);
+			});
 		}
 	},
 	$data: {
@@ -382,16 +403,22 @@ var version = '1.0pre',
 		},
 		set: function (elem, name, value)
 		{
-			value = typeof value === 'object' ? $json.encode(value) : value;
-			typeof name === 'object' ? $each(name, function (key, value)
+			return mapcall(elem, function (elem)
 			{
-				$attr.set(elem, 'data-' + key, value);
-			}) : $attr.set(elem, 'data-' + name, value);
-			return elem;
+				value = typeof value === 'object' ? $json.encode(value) : value;
+				typeof name === 'object' ? $each(name, function (key, value)
+				{
+					$attr.set(elem, 'data-' + key, value);
+				}) : $attr.set(elem, 'data-' + name, value);
+				return elem;
+			});
 		},
 		remove: function (elem, name)
 		{
-			return $attr.remove(elem, 'data-' + name);
+			return mapcall(elem, function (elem)
+			{
+				$attr.remove(elem, 'data-' + name);
+			});
 		}
 	},
 	$cache: {
@@ -470,73 +497,82 @@ var version = '1.0pre',
 	$event: {
 		add: function (elem, type, handler)
 		{
-			if (typeof type === 'object')
+			return mapcall(elem, function (elem)
 			{
-				$each(type, function (type, handler)
+				if (typeof type === 'object')
 				{
-					$event.add(elem, type, handler);
-				});
-				return elem;
-			}
-			if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
-			{
-				return false;
-			}
-			if (elem.addEventListener)
-			{
-				if (type === 'mouseenter' || type === 'mouseleave')
-				{
-					type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
-					handler = $event.handler.mouseenter(handler);
-				}
-				elem.addEventListener(type, handler, false);
-			}
-			else
-			{
-				// Prevent attaching duplicate event with same event type and same handler for IE8-6
-				if (elem.getAttribute)
-				{
-					var handlerName = handler.toString();
-					if ($data.get(elem, 'event-' + type + '-' + handlerName))
+					$each(type, function (type, handler)
 					{
-						return false;
-					}
-					$data.set(elem, 'event-' + type + '-' + handlerName, true);
+						$event.add(elem, type, handler);
+					});
+					return elem;
 				}
-				elem.attachEvent('on' + type, handler);
-			}
-			return elem;
+				if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
+				{
+					return false;
+				}
+				if (elem.addEventListener)
+				{
+					if (type === 'mouseenter' || type === 'mouseleave')
+					{
+						type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
+						handler = $event.handler.mouseenter(handler);
+					}
+					elem.addEventListener(type, handler, false);
+				}
+				else
+				{
+					// Prevent attaching duplicate event with same event type and same handler for IE8-6
+					if (elem.getAttribute)
+					{
+						var handlerName = handler.toString();
+						if ($data.get(elem, 'event-' + type + '-' + handlerName))
+						{
+							return false;
+						}
+						$data.set(elem, 'event-' + type + '-' + handlerName, true);
+					}
+					elem.attachEvent('on' + type, handler);
+				}
+				return elem;
+			});
 		},
 		remove: document.removeEventListener ?
 		function (elem, type, handler)
 		{
-			if (typeof type === 'object')
+			return mapcall(elem, function (elem)
 			{
-				$each(type, function (type, handler)
+				if (typeof type === 'object')
 				{
-					$event.remove(elem, type, handler);
-				});
+					$each(type, function (type, handler)
+					{
+						$event.remove(elem, type, handler);
+					});
+					return elem;
+				}
+				elem.removeEventListener(type, handler, false);
 				return elem;
-			}
-			elem.removeEventListener(type, handler, false);
-			return elem;
+			});
 		}:
 		function (elem, type, handler)
 		{
-			if (typeof type === 'object')
+			return mapcall(elem, function (elem)
 			{
-				$each(type, function (type, handler)
+				if (typeof type === 'object')
 				{
-					$event.remove(elem, type, handler);
-				});
+					$each(type, function (type, handler)
+					{
+						$event.remove(elem, type, handler);
+					});
+					return elem;
+				}
+				elem.detachEvent('on' + type, handler);
+				if (elem.removeAttribute)
+				{
+					$attr.remove(elem, 'event-' + type + '-' + handler.toString());
+				}
 				return elem;
-			}
-			elem.detachEvent('on' + type, handler);
-			if (elem.removeAttribute)
-			{
-				$attr.remove(elem, 'event-' + type + '-' + handler.toString());
-			}
-			return elem;
+			});
 		},
 		handler: {
 			mouseenter: function (handler)
@@ -617,11 +653,14 @@ var version = '1.0pre',
 		},
 		set: function (elem, name, value)
 		{
-			typeof name === 'object' ? $each(name, function (propertyName, value)
+			return mapcall(elem, function (elem)
 			{
-				$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
-			}) : $style.set(elem, $string.camelCase(name), $css.fix(name, value));
-			return elem;
+				typeof name === 'object' ? $each(name, function (propertyName, value)
+				{
+					$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
+				}) : $style.set(elem, $string.camelCase(name), $css.fix(name, value));
+				return elem;
+			});
 		},
 		number: {
 			'fontWeight': true,
@@ -676,31 +715,40 @@ var version = '1.0pre',
 		set: document.documentElement.style.opacity !== undefined ?
 		function (elem, name, value)
 		{
-			elem.style[name] = value;
-			return true;
+			return mapcall(elem, function (elem)
+			{
+				elem.style[name] = value;
+				return true;
+			});
 		}:
 		function (elem, name, value)
 		{
-			if (!elem.currentStyle || !elem.currentStyle.hasLayout)
+			return mapcall(elem, function (elem)
 			{
-				elem.style.zoom = 1;
-			}
-			if (name === 'opacity')
-			{
-				elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
-			}
-			else
-			{
-				elem.style[name] = value;
-			}
-			return true;
+				if (!elem.currentStyle || !elem.currentStyle.hasLayout)
+				{
+					elem.style.zoom = 1;
+				}
+				if (name === 'opacity')
+				{
+					elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
+				}
+				else
+				{
+					elem.style[name] = value;
+				}
+				return true;
+			});
 		}
 	},
 	$pos: function (elem, x, y)
 	{
-		$style.set(elem, 'left', x + 'px');
-		$style.set(elem, 'top', y + 'px');
-		return elem;
+		return mapcall(elem, function (elem)
+		{
+			$style.set(elem, 'left', x + 'px');
+			$style.set(elem, 'top', y + 'px');
+			return elem;
+		});
 	},
 	$offset: function (elem)
 	{
@@ -716,110 +764,140 @@ var version = '1.0pre',
 	},
 	$append: function (elem, node)
 	{
-		return elem.appendChild(nodeManip(elem, node));
+		return mapcall(elem, function (elem)
+		{
+			return elem.appendChild(nodeManip(elem, node));
+		});
 	},
 	$prepend: function (elem, node)
 	{
-		return elem.firstChild ? elem.insertBefore(nodeManip(elem, node), elem.firstChild) : elem.appendChild(nodeManip(elem, node));
+		return mapcall(elem, function (elem)
+		{
+			return elem.firstChild ? elem.insertBefore(nodeManip(elem, node), elem.firstChild) : elem.appendChild(nodeManip(elem, node));
+		});
 	},
 	$before: function (elem, node)
 	{
-		return elem.parentNode.insertBefore(nodeManip(elem, node), elem);
+		return mapcall(elem, function (elem)
+		{
+			return elem.parentNode.insertBefore(nodeManip(elem, node), elem);
+		});
 	},
 	$after: function (elem, node)
 	{
-		return elem.nextSibling ? elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(nodeManip(elem, node));
+		return mapcall(elem, function (elem)
+		{
+			return elem.nextSibling ? elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(nodeManip(elem, node));
+		});
 	},
 	$remove: function (elem)
 	{
-		return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
+		return mapcall(elem, function (elem)
+		{
+			return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
+		});
 	},
 	$empty: function (elem)
 	{
 		// Directly setting the innerHTML attribute to blank will release memory for browser
 		// Only remove the childNodes will not able to do this for some browsers
-		elem.innerHTML = '';
-		return elem;
+		return mapcall(elem, function (elem)
+		{
+			elem.innerHTML = '';
+			return elem;
+		});
 	},
 	$html: function (elem, html)
 	{
-		if (html === undefined)
+		return mapcall(elem, function (elem)
 		{
-			return elem.nodeType === 1 ? elem.innerHTML : null;
-		}
-		try
-		{
-			elem.innerHTML = html;
-		}
-		catch (e)
-		{
-			$append($empty(elem), html);
-		}
-		return elem;
+			if (!html)
+			{
+				return elem.nodeType === 1 ? elem.innerHTML : null;
+			}
+			try
+			{
+				elem.innerHTML = html;
+			}
+			catch (e)
+			{
+				$append($empty(elem), html);
+			}
+			return elem;
+		});
 	},
 	$text: function (elem, text)
 	{
 		// Retrieve the text value
 		// textContent and innerText returns different results from different browser
 		// So it have to rewrite the process method
-		if (text === undefined)
+		return mapcall(elem, function (elem)
 		{
-			var rtext = '',
-				textContent = elem.textContent,
-				nodeType;
-			// If the content of elem is text only
-			if ((textContent || elem.innerText) === elem.innerHTML)
+			if (!text)
 			{
-				rtext = textContent ? $string.trim(elem.textContent.replace(rbline, '')) : elem.innerText.replace(rline, '');
-			}
-			else
-			{
-				for (elem = elem.firstChild; elem; elem = elem.nextSibling)
+				var rtext = '',
+					textContent = elem.textContent,
+					nodeType;
+				// If the content of elem is text only
+				if ((textContent || elem.innerText) === elem.innerHTML)
 				{
-					nodeType = elem.nodeType;
-					if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
+					rtext = textContent ? $string.trim(elem.textContent.replace(rbline, '')) : elem.innerText.replace(rline, '');
+				}
+				else
+				{
+					for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 					{
-						rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
-					}
-					if (nodeType === 1 || nodeType === 2)
-					{
-						rtext += $text(elem) + ($style.get(elem, 'display') === 'block' || elem.tagName.toLowerCase() === 'br' ? "\n" : '');
+						nodeType = elem.nodeType;
+						if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
+						{
+							rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
+						}
+						if (nodeType === 1 || nodeType === 2)
+						{
+							rtext += $text(elem) + ($style.get(elem, 'display') === 'block' || elem.tagName.toLowerCase() === 'br' ? "\n" : '');
+						}
 					}
 				}
+				return rtext;
 			}
-			return rtext;
-		}
-		// Set text node.
-		$empty(elem);
-		elem.appendChild(document.createTextNode(text));
-		return elem;
+			// Set text node.
+			$empty(elem);
+			elem.appendChild(document.createTextNode(text));
+			return elem;
+		});
 	},
 	$className: {
 		add: function (elem, name)
 		{
-			if (elem.className === '')
+			return mapcall(elem, function (elem)
 			{
-				elem.className = name;
-			}
-			else
-			{
-				var ori = elem.className,
-					nclass = [];
-				$each(name.split(rspace), function (i, item)
+				if (elem.className === '')
 				{
-					if (!new RegExp('\\b(' + item + ')\\b').test(ori))
+					elem.className = name;
+				}
+				else
+				{
+					var ori = elem.className,
+						nclass = [];
+					$each(name.split(rspace), function (i, item)
 					{
-						nclass.push(' ' + item);
-					}
-				});
-				elem.className += nclass.join('');
-			}
-			return elem;
+						if (!new RegExp('\\b(' + item + ')\\b').test(ori))
+						{
+							nclass.push(' ' + item);
+						}
+					});
+					elem.className += nclass.join('');
+				}
+				return elem;
+			});
 		},
 		set: function (elem, name)
 		{
-			elem.className = name;
-			return elem;
+			return mapcall(elem, function (elem)
+			{
+				elem.className = name;
+				return elem;
+			});
 		},
 		has: function (elem, name)
 		{
@@ -827,8 +905,11 @@ var version = '1.0pre',
 		},
 		remove: function (elem, name)
 		{
-			elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '').split(rspace).join(' ')) : '';
-			return elem;
+			return mapcall(elem, function (elem)
+			{
+				elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '').split(rspace).join(' ')) : '';
+				return elem;
+			});
 		}
 	},
 	$hide: function (elem, duration, callback)
@@ -841,14 +922,17 @@ var version = '1.0pre',
 	},
 	$toggle: function (elem, duration, callback)
 	{
-		if ($style.get(elem, 'display') == 'none')
+		return mapcall(elem, function (elem)
 		{
-			$show(elem, duration, callback);
-		}
-		else
-		{
-			$hide(elem, duration, callback);
-		}
+			if ($style.get(elem, 'display') == 'none')
+			{
+				$show(elem, duration, callback);
+			}
+			else
+			{
+				$hide(elem, duration, callback);
+			}
+		});
 	},
 	$animate: (function ()
 	{
@@ -873,147 +957,154 @@ var version = '1.0pre',
 			transform_name = prefix_name + 'Transform';
 		return function (elem, properties, duration, callback)
 		{
-			var css_value = [],
-				css_name = [],
-				unit = [],
-				css_style = [],
-				style = elem.style,
-				css, offset;
-			duration = duration || 300;
-			for (css in properties)
+			return mapcall(elem, function (elem)
 			{
-				css_name[css] = $string.camelCase(css);
-				if (properties[css].from !== undefined)
+				var css_value = [],
+					css_name = [],
+					unit = [],
+					css_style = [],
+					style = elem.style,
+					css, offset;
+				duration = duration || 300;
+				for (css in properties)
 				{
-					properties[css].to = properties[css].to || 0;
-					css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
-					unit[css] = $css.unit(css, properties[css].to);
-					$style.set(elem, css_name[css], parseInt(properties[css].from) + unit[css]);
+					css_name[css] = $string.camelCase(css);
+					if (properties[css].from !== undefined)
+					{
+						properties[css].to = properties[css].to || 0;
+						css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
+						unit[css] = $css.unit(css, properties[css].to);
+						$style.set(elem, css_name[css], parseInt(properties[css].from) + unit[css]);
+					}
+					else
+					{
+						css_value[css] = !$css.number[css] ? parseInt(properties[css]) : properties[css];
+						unit[css] = $css.unit(css, properties[css]);
+						$style.set(elem, css_name[css], $style.get(elem, css_name[css]));
+					}
+					if (css === 'left' || css === 'top')
+					{
+						offset = $offset(elem);
+						$style.set(elem, css, (css === 'left' ? offset.left : offset.top) + 'px');
+					}
+					css_style.push(css);
 				}
-				else
-				{
-					css_value[css] = !$css.number[css] ? parseInt(properties[css]) : properties[css];
-					unit[css] = $css.unit(css, properties[css]);
-					$style.set(elem, css_name[css], $style.get(elem, css_name[css]));
-				}
-				if (css === 'left' || css === 'top')
-				{
-					offset = $offset(elem);
-					$style.set(elem, css, (css === 'left' ? offset.left : offset.top) + 'px');
-				}
-				css_style.push(css);
-			}
 
-			setTimeout(function ()
-			{
-				style[transition_name] = 'all ' + duration + 'ms';
-				
-				// Using CSS3 transform function will enable hardware acceleration to handle this animation
-				if (properties['left'] || properties['top'])
+				setTimeout(function ()
 				{
-					style[transform_name] = 'translateZ(0)';
-				}
+					style[transition_name] = 'all ' + duration + 'ms';
+					
+					// Using CSS3 transform function will enable hardware acceleration to handle this animation
+					if (properties['left'] || properties['top'])
+					{
+						style[transform_name] = 'translateZ(0)';
+					}
 
-				$each(css_style, function (i, css)
+					$each(css_style, function (i, css)
+					{
+						style[css_name[css]] = css_value[css] + unit[css];
+					});
+
+				}, 15);
+
+				// Animation completed
+				setTimeout(function ()
 				{
-					style[css_name[css]] = css_value[css] + unit[css];
-				});
+					// Clear up CSS transition property
+					style[transition_name] = style[transform_name] = '';
+					if (callback)
+					{
+						callback(elem);
+					}
+				}, duration);
 
-			}, 15);
-
-			// Animation completed
-			setTimeout(function ()
-			{
-				// Clear up CSS transition property
-				style[transition_name] = style[transform_name] = '';
-				if (callback)
-				{
-					callback(elem);
-				}
-			}, duration);
-
-			return elem;
+				return elem;
+			});
 		}
 	})():
 	function (elem, properties, duration, callback)
 	{
-		var step = 0,
-			i = 0,
-			j = 0,
-			length = 0,
-			p = 30,
-			css_to_value = [],
-			css_from_value = [],
-			css_name = [],
-			css_unit = [],
-			css_style = [],
-			property_value, css, offset, timer;
-		duration = duration || 300;
-
-		for (css in properties)
+		return mapcall(elem, function (elem)
 		{
-			css_name.push(css === 'opacity' ? 'filter' : $string.camelCase(css));
-			if (properties[css].from !== undefined)
-			{
-				property_value = properties[css].to;
-				css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
-				$style.set(elem, css_name[i], css_from_value[i] + $css.unit(css, property_value));
-			}
-			else
-			{
-				property_value = properties[css];
+			var step = 0,
+				i = 0,
+				j = 0,
+				length = 0,
+				p = 30,
+				css_to_value = [],
+				css_from_value = [],
+				css_name = [],
+				css_unit = [],
+				css_style = [],
+				opacity = elem.style.opacity !== undefined,
+				property_value, css, offset, timer;
+			duration = duration || 300;
 
-				// Speical handle for left and top
-				if (css === 'left' || css === 'top')
+			for (css in properties)
+			{
+				css_name.push(css === 'opacity' && !opacity ? 'filter' : $string.camelCase(css));
+				if (properties[css].from !== undefined)
 				{
-					offset = $offset(elem);
-					css_from_value.push(css === 'left' ? offset.left : offset.top);
+					property_value = properties[css].to;
+					css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
+					$style.set(elem, css_name[i], css_from_value[i] + $css.unit(css, property_value));
 				}
 				else
 				{
-					css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
+					property_value = properties[css];
+
+					// Speical handle for left and top
+					if (css === 'left' || css === 'top')
+					{
+						offset = $offset(elem);
+						css_from_value.push(css === 'left' ? offset.left : offset.top);
+					}
+					else
+					{
+						css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
+					}
+				}
+				css_to_value.push(!$css.number[css] ? parseInt(property_value) : property_value);
+				css_unit.push($css.unit(css, property_value));
+				i++;
+				length++;
+			}
+			// Pre-calculation for CSS value
+			for (j = 0; j < p; j++)
+			{
+				css_style[j] = [];
+				for (i = 0; i < length; i++)
+				{
+					css_style[j][css_name[i]] = css_name[i] === 'filter' ? 'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
+																(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
 				}
 			}
-			css_to_value.push(!$css.number[css] ? parseInt(property_value) : property_value);
-			css_unit.push($css.unit(css, property_value));
-			i++;
-			length++;
-		}
-		// Pre-calculation for CSS value
-		for (j = 0; j < p; j++)
-		{
-			css_style[j] = [];
-			for (i = 0; i < length; i++)
-			{
-				css_style[j][css_name[i]] = css_name[i] === 'filter' ? 'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
-															(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
-			}
-		}
 
-		for (; i < p; i++)
-		{
-			timer = setTimeout(function ()
+			for (; i < p; i++)
+			{
+				timer = setTimeout(function ()
+				{
+					for (i = 0; i < length; i++)
+					{
+						elem.style[css_name[i]] = css_style[step][css_name[i]];
+					}
+					step++;
+				}, (duration / p) * i);
+			}
+
+			setTimeout(function ()
 			{
 				for (i = 0; i < length; i++)
 				{
 					elem.style[css_name[i]] = css_style[step][css_name[i]];
 				}
-				step++;
-			}, (duration / p) * i);
-		}
-
-		setTimeout(function ()
-		{
-			for (i = 0; i < length; i++)
-			{
-				elem.style[css_name[i]] = css_style[step][css_name[i]];
-			}
-			if (callback)
-			{
-				callback(elem);
-			}
-		}, duration);
-		return elem;
+				if (callback)
+				{
+					callback(elem);
+				}
+			}, duration);
+			return elem;
+		});
 	},
 	$fadeout: function (elem, duration, callback)
 	{
@@ -1058,7 +1149,6 @@ var version = '1.0pre',
 				expires = value;
 				return $each(key, function (name, value)
 				{
-
 					$cookie.set(name, value, expires);
 				});
 			}
