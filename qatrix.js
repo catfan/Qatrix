@@ -18,6 +18,7 @@ var version = '1.0pre',
 	rnum = /[\-\+0-9\.]/ig,
 	rspace = /\s+/,
 	rtrim = /(^\s*)|(\s*$)/g,
+	ropacity = /opacity=([^)]*)/,
 	rvalidchars = /^[\],:{}\s]*$/,
 	rvalidescape = /\\(?:["\\\/bfnrt]|u[\da-fA-F]{4})/g,
 	rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d\d*\.|)\d+(?:[eE][\-+]?\d+|)/g,
@@ -70,19 +71,23 @@ var version = '1.0pre',
 	// For map function callback
 	mapcall = function (match, callback)
 	{
+		var length = match.length;
 		if (callback)
 		{
-			if (match.length)
+			if (length !== undefined)
 			{
-				$each(match, function (i, item)
+				if (length > 0)
 				{
-					callback(item);
-				});
+					$each(match, function (i, item)
+					{
+						callback(item);
+					});
+				}
 				return match;
 			}
 			else
 			{
-				return callback(match);
+			 	return callback(match);
 			}
 		}
 		else
@@ -121,14 +126,12 @@ var version = '1.0pre',
 			{
 				overflow = $style.get(elem, 'overflow');
 				elem.style.overflow = 'hidden';
-				
-				if (show)
-				{
-					prop.opacity = {
-						from: 0,
-						to: 1
-					};
-				}
+
+				prop.opacity = show ? {
+					from: 0,
+					to: 1
+				} : 0;
+
 				$each(animDisplay, function (i, css)
 				{
 					prop[css] = show ? {
@@ -140,7 +143,7 @@ var version = '1.0pre',
 				{
 					$each(animDisplayProp, function (i, css)
 					{
-						elem.style.removeProperty(css);
+						elem.style[css] = '';
 					});
 					elem.style.display = display;
 					elem.style.overflow = overflow;
@@ -195,11 +198,15 @@ var version = '1.0pre',
 		var i = 0,
 			length = haystack.length,
 			name;
-		if (length)
+
+		if (length !== undefined)
 		{
-			for (; i < length; i++)
+			for (; i < length;)
 			{
-				callback.call(haystack[i], i, haystack[i]);
+				if (callback.call(haystack[i], i, haystack[i++]) === false)
+				{
+					break;
+				}
 			}
 		}
 		else
@@ -692,7 +699,8 @@ var version = '1.0pre',
 		{
 			if (elem !== null)
 			{
-				return document.defaultView.getComputedStyle(elem, null).getPropertyValue(property);
+				var value = document.defaultView.getComputedStyle(elem, null).getPropertyValue(property);
+				return value === 'auto' || value === '' ? 0 : value;
 			}
 			return false;
 		}:
@@ -700,15 +708,10 @@ var version = '1.0pre',
 		{
 			if (elem !== null)
 			{
-				if (property === 'width' && elem.currentStyle['width'] === 'auto')
-				{
-					return elem.offsetWidth;
-				}
-				if (property === 'height' && elem.currentStyle['height'] === 'auto')
-				{
-					return elem.offsetHeight;
-				}
-				return elem.currentStyle[$string.camelCase(property)];
+				var value = property === 'opacity' ? ropacity.test(elem.currentStyle['filter']) ?
+					(0.01 * parseFloat(RegExp.$1)) + '' :
+					1 : elem.currentStyle[$string.camelCase(property)];
+				return value === 'auto' ? 0 : value;
 			}
 			return false;
 		},
