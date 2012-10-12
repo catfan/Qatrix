@@ -71,6 +71,11 @@ var version = '1.0pre',
 	// For map function callback
 	mapcall = function (match, callback)
 	{
+		if (match === null)
+		{
+			return;
+		}
+
 		var length = match.length;
 		if (callback)
 		{
