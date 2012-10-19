@@ -819,19 +819,19 @@ var version = '1.0pre',
 	{
 		return mapcall(elem, function (elem)
 		{
-			if (!html)
+			if (html)
 			{
-				return elem.nodeType === 1 ? elem.innerHTML : null;
+				try
+				{
+					elem.innerHTML = html;
+				}
+				catch (e)
+				{
+					$append($empty(elem), html);
+				}
+				return elem;
 			}
-			try
-			{
-				elem.innerHTML = html;
-			}
-			catch (e)
-			{
-				$append($empty(elem), html);
-			}
-			return elem;
+			return elem.nodeType === 1 ? elem.innerHTML : null;
 		});
 	},
 	$text: function (elem, text)
@@ -841,7 +841,14 @@ var version = '1.0pre',
 		// So it have to rewrite the process method
 		return mapcall(elem, function (elem)
 		{
-			if (!text)
+			if (text)
+			{
+				// Set text node.
+				$empty(elem);
+				elem.appendChild(document.createTextNode(text));
+				return elem;
+			}
+			else
 			{
 				var rtext = '',
 					textContent = elem.textContent,
@@ -868,10 +875,6 @@ var version = '1.0pre',
 				}
 				return rtext;
 			}
-			// Set text node.
-			$empty(elem);
-			elem.appendChild(document.createTextNode(text));
-			return elem;
 		});
 	},
 	$className: {
@@ -1083,8 +1086,9 @@ var version = '1.0pre',
 				css_style[j] = [];
 				for (i = 0; i < length; i++)
 				{
-					css_style[j][css_name[i]] = css_name[i] === 'filter' ? 'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
-																(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
+					css_style[j][css_name[i]] = css_name[i] === 'filter' ?
+						'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
+						(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
 				}
 			}
 
@@ -1116,21 +1120,27 @@ var version = '1.0pre',
 	},
 	$fadeout: function (elem, duration, callback)
 	{
-		return $animate(elem, {
-			'opacity': {
-				from: 1,
-				to: 0
-			}
-		}, duration || 500, callback);
+		return mapcall(elem, function (elem)
+		{
+			$animate(elem, {
+				'opacity': {
+					from: 1,
+					to: 0
+				}
+			}, duration || 500, callback);
+		});
 	},
 	$fadein: function (elem, duration, callback)
 	{
-		return $animate(elem, {
-			'opacity': {
-				from: 0,
-				to: 1
-			}
-		}, duration || 500, callback);
+		return mapcall(elem, function (elem)
+		{
+			$animate(elem, {
+				'opacity': {
+					from: 0,
+					to: 1
+				}
+			}, duration || 500, callback);
+		});
 	},
 	$cookie: {
 		get: function (key)
