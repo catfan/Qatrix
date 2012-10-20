@@ -1,14 +1,14 @@
 /*
-    Qatrix JavaScript v1.0pre
+	Qatrix JavaScript v1.0
 
-    Copyright (c) 2012, Angel Lai
-    The Qatrix project is under MIT license.
-    For details, see the Qatrix website: http://qatrix.com
+	Copyright (c) 2012, Angel Lai
+	The Qatrix project is under MIT license.
+	For details, see the Qatrix website: http://qatrix.com
 */
 
 (function (window, document, undefined) {
 
-var version = '1.0pre',
+var version = '1.0',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -25,7 +25,6 @@ var version = '1.0pre',
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
 
 	animDisplay = ['height', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'],
-	animDisplayProp = animDisplay.concat(['opacity']),
 	
 	// For DOM ready
 	readyList = [],
@@ -108,6 +107,7 @@ var version = '1.0pre',
 		{
 			var prop = {},
 				show = type === 'show',
+				style = elem.style,
 				display, temp, overflow;
 
 			if (show)
@@ -120,7 +120,7 @@ var version = '1.0pre',
 					$remove(temp);
 					$data.set(elem, '_display', display);
 				}
-				elem.style.display = display;
+				style.display = display;
 			}
 			else
 			{
@@ -130,7 +130,7 @@ var version = '1.0pre',
 			if (duration)
 			{
 				overflow = $style.get(elem, 'overflow');
-				elem.style.overflow = 'hidden';
+				style.overflow = 'hidden';
 
 				prop.opacity = show ? {
 					from: 0,
@@ -146,12 +146,13 @@ var version = '1.0pre',
 				});
 				$animate(elem, prop, duration, function ()
 				{
-					$each(animDisplayProp, function (i, css)
+					$each(animDisplay, function (i, css)
 					{
-						elem.style[css] = '';
+						style[css] = '';
 					});
-					elem.style.display = display;
-					elem.style.overflow = overflow;
+					$style.set(elem, 'opacity', show ? 1 : 0);
+					style.display = display;
+					style.overflow = overflow;
 
 					if (callback)
 					{
@@ -161,7 +162,7 @@ var version = '1.0pre',
 			}
 			else
 			{
-				elem.style.display = display;
+				style.display = display;
 			}
 		});
 	},
@@ -433,39 +434,6 @@ var version = '1.0pre',
 			});
 		}
 	},
-	$cache: {
-		data: {},
-		get: function (key)
-		{
-			var data = $cache.data[key];
-			return data || typeof data === 'number' ? data : null;
-		},
-		set: function (key, value)
-		{
-			$cache.data[key] = value;
-			return value;
-		},
-		inc: function (key)
-		{
-			var data = $cache.data[key];
-			return typeof data === 'number' ? $cache.data[key]++ : data;
-		},
-		dec: function (key)
-		{
-			var data = $cache.data[key];
-			return typeof data === 'number' ? $cache.data[key]-- : data;
-		},
-		remove: function (key)
-		{
-			delete $cache.data[key];
-			return true;
-		},
-		flush: function ()
-		{
-			$cache.data = {};
-			return true;
-		}
-	},
 	$storage: window.localStorage ?
 	{
 		set: function (name, value)
@@ -678,7 +646,7 @@ var version = '1.0pre',
 			'fontWeight': true,
 			'lineHeight': true,
 			'opacity': true,
-			"zIndex": true
+			'zIndex': true
 		},
 		unit: function (name, value)
 		{
@@ -740,6 +708,7 @@ var version = '1.0pre',
 				if (name === 'opacity')
 				{
 					elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
+					elem.style.zoom = 1;
 				}
 				else
 				{
@@ -764,7 +733,7 @@ var version = '1.0pre',
 			doc_elem = document.documentElement,
 			box = elem.getBoundingClientRect();
 		return {
-			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (doc_elem.clientTop || body.clientTop  || 0),
+			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (doc_elem.clientTop || body.clientTop || 0),
 			left: box.left + (window.scrollX || body.parentNode.scrollLeft || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
 			width: elem.offsetWidth,
 			height: elem.offsetHeight
@@ -976,7 +945,7 @@ var version = '1.0pre',
 					css_style = [],
 					style = elem.style,
 					css, offset;
-				duration = duration || 300;
+
 				for (css in properties)
 				{
 					css_name[css] = $string.camelCase(css);
@@ -1027,7 +996,7 @@ var version = '1.0pre',
 					{
 						callback(elem);
 					}
-				}, duration);
+				}, duration || 300);
 
 				return elem;
 			});
@@ -1047,13 +1016,12 @@ var version = '1.0pre',
 				css_name = [],
 				css_unit = [],
 				css_style = [],
-				opacity = elem.style.opacity !== undefined,
 				property_value, css, offset, timer;
 			duration = duration || 300;
 
 			for (css in properties)
 			{
-				css_name.push(css === 'opacity' && !opacity ? 'filter' : $string.camelCase(css));
+				css_name.push($string.camelCase(css));
 				if (properties[css].from !== undefined)
 				{
 					property_value = properties[css].to;
@@ -1086,9 +1054,7 @@ var version = '1.0pre',
 				css_style[j] = [];
 				for (i = 0; i < length; i++)
 				{
-					css_style[j][css_name[i]] = css_name[i] === 'filter' ?
-						'alpha(opacity=' + (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) * 100 + ')' :
-						(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + css_unit[i];
+					css_style[j][css_name[i]] = (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + (css_name[i] === 'opacity' ? '' : css_unit[i]);
 				}
 			}
 
@@ -1098,7 +1064,7 @@ var version = '1.0pre',
 				{
 					for (i = 0; i < length; i++)
 					{
-						elem.style[css_name[i]] = css_style[step][css_name[i]];
+						$style.set(elem, css_name[i], css_style[step][css_name[i]]);
 					}
 					step++;
 				}, (duration / p) * i);
@@ -1108,7 +1074,7 @@ var version = '1.0pre',
 			{
 				for (i = 0; i < length; i++)
 				{
-					elem.style[css_name[i]] = css_style[step][css_name[i]];
+					$style.set(elem, css_name[i], css_style[step][css_name[i]]);
 				}
 				if (callback)
 				{
@@ -1196,7 +1162,7 @@ var version = '1.0pre',
 		}:
 		function (data)
 		{
-			return $json.isJSON(data) ? eval('(' + $string.trim(data) + ')') : false;
+			return $json.isJSON(data) ? (new Function('return ' + $string.trim(data)))() : false;
 		},
 		encode: window.JSON ?
 		function (data)
@@ -1258,7 +1224,11 @@ var version = '1.0pre',
 		},
 		isJSON: function (string)
 		{
-			return typeof string === 'string' && $string.trim(string) !== '' ? rvalidchars.test(string.replace(rvalidescape, '@').replace(rvalidtokens, ']').replace(rvalidbraces, '')) : false;
+			return typeof string === 'string' && $string.trim(string) !== '' ?
+				rvalidchars.test(string.replace(rvalidescape, '@')
+					.replace(rvalidtokens, ']')
+					.replace(rvalidbraces, '')) :
+				false;
 		}
 	},
 	$ajax: function (url, options)
@@ -1307,7 +1277,7 @@ var version = '1.0pre',
 	},
 	$loadscript: function (src)
 	{
-		return $prepend(document.getElementsByTagName('head')[0] || document.head || document.documentElement, $new('script', {
+		return $prepend(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
 			'type': 'text/javascript',
 			'async': true,
 			'src': src
