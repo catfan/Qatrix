@@ -135,7 +135,10 @@ var version = '1.0',
 				prop.opacity = show ? {
 					from: 0,
 					to: 1
-				} : 0;
+				} : {
+					from: 1,
+					to: 0
+				};
 
 				$each(animDisplay, function (i, css)
 				{
@@ -150,7 +153,7 @@ var version = '1.0',
 					{
 						style[css] = '';
 					});
-					$style.set(elem, 'opacity', show ? 1 : 0);
+					$style.set(elem, 'opacity', '');
 					style.display = display;
 					style.overflow = overflow;
 
@@ -709,6 +712,7 @@ var version = '1.0',
 				{
 					elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
 					elem.style.zoom = 1;
+					//alert(elem.style.filter);
 				}
 				else
 				{
@@ -904,14 +908,7 @@ var version = '1.0',
 	{
 		return mapcall(elem, function (elem)
 		{
-			if ($style.get(elem, 'display') == 'none')
-			{
-				$show(elem, duration, callback);
-			}
-			else
-			{
-				$hide(elem, duration, callback);
-			}
+			$style.get(elem, 'display') === 'none' ? $show(elem, duration, callback) : $hide(elem, duration, callback);
 		});
 	},
 	$animate: (function ()
