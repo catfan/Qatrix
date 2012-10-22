@@ -712,7 +712,6 @@ var version = '1.0',
 				{
 					elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
 					elem.style.zoom = 1;
-					//alert(elem.style.filter);
 				}
 				else
 				{
