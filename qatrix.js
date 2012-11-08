@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0
+	Qatrix JavaScript v1.0.1
 
 	Copyright (c) 2012, Angel Lai
 	The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function (window, document, undefined) {
 
-var version = '1.0',
+var version = '1.0.1',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -1235,7 +1235,7 @@ var version = '1.0',
 			url = undefined;
 		}
 		options = options || {};
-		var request = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP'),
+		var request = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
 			param = [],
 			response;
 		request.open(options.type || 'POST', url || options.url, true);
