@@ -269,10 +269,10 @@ var version = '1.0',
 	function (elem, className, callback)
 	{
 		var match = [],
-			rclass = new RegExp('\\b' + className + '\\b');
+			rclass = new RegExp('\\s' + className + '\\s');
 		$tag(elem, '*', function (item)
 		{
-			if (rclass.test(item.className))
+			if (rclass.test(' ' + item.className + ' '))
 			{
 				match.push(item);
 			}
