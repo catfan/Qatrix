@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0.1
+	Qatrix JavaScript v1.0.1.pre
 
 	Copyright (c) 2012, Angel Lai
 	The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function (window, document, undefined) {
 
-var version = '1.0.1',
+var version = '1.0.1.pre',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -269,7 +269,7 @@ var version = '1.0.1',
 	function (elem, className, callback)
 	{
 		var match = [],
-			rclass = new RegExp('\\b' + className + '\\b');
+			rclass = new RegExp("(^|\\s)" + className + "(\\s|$)");
 		$tag(elem, '*', function (item)
 		{
 			if (rclass.test(item.className))
