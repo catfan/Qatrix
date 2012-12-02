@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0.1.pre
+	Qatrix JavaScript v1.0.2.pre
 
 	Copyright (c) 2012, Angel Lai
 	The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function (window, document, undefined) {
 
-var version = '1.0.1.pre',
+var version = '1.0.2.pre',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -958,11 +958,6 @@ var version = '1.0.1.pre',
 						unit[css] = $css.unit(css, properties[css]);
 						$style.set(elem, css_name[css], $style.get(elem, css_name[css]));
 					}
-					if (css === 'left' || css === 'top')
-					{
-						offset = $offset(elem);
-						$style.set(elem, css, (css === 'left' ? offset.left : offset.top) + 'px');
-					}
 					css_style.push(css);
 				}
 
@@ -1027,17 +1022,7 @@ var version = '1.0.1.pre',
 				else
 				{
 					property_value = properties[css];
-
-					// Speical handle for left and top
-					if (css === 'left' || css === 'top')
-					{
-						offset = $offset(elem);
-						css_from_value.push(css === 'left' ? offset.left : offset.top);
-					}
-					else
-					{
-						css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
-					}
+					css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
 				}
 				css_to_value.push(!$css.number[css] ? parseInt(property_value) : property_value);
 				css_unit.push($css.unit(css, property_value));
@@ -1070,7 +1055,7 @@ var version = '1.0.1.pre',
 			{
 				for (i = 0; i < length; i++)
 				{
-					$style.set(elem, css_name[i], css_style[step][css_name[i]]);
+					$style.set(elem, css_name[i], css_to_value[i] + css_unit[i]);
 				}
 				if (callback)
 				{
