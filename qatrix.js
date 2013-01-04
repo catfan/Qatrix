@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0.2.pre
+	Qatrix JavaScript v1.0.2
 
 	Copyright (c) 2012, Angel Lai
 	The Qatrix project is under MIT license.
@@ -8,7 +8,7 @@
 
 (function (window, document, undefined) {
 
-var version = '1.0.2.pre',
+var version = '1.0.2',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -632,6 +632,15 @@ var version = '1.0.2.pre',
 	$css: {
 		get: function (elem, name)
 		{
+			if (typeof name === 'object')
+			{
+				var haystack = {};
+				$each(name, function (i, property)
+				{
+					haystack[property] = $style.get(elem, property);
+				});
+				return haystack;
+			}
 			return $style.get(elem, name);
 		},
 		set: function (elem, name, value)
@@ -1242,16 +1251,19 @@ var version = '1.0.2.pre',
 		request.send(param.join('&').replace(/%20/g, '+'));
 		request.onreadystatechange = function ()
 		{
-			if (request.readyState === 4 && request.status === 200 && options.success)
+			if (request.readyState === 4)
 			{
-				data = request.responseText;
-				options.success(data !== '' && $json.isJSON(data) ? $json.decode(data) : data);
-			}
-			else
-			{
-				if (options.error)
+				if (request.status === 200 && options.success)
 				{
-					options.error.call();
+					data = request.responseText;
+					options.success(data !== '' && $json.isJSON(data) ? $json.decode(data) : data);
+				}
+				else
+				{
+					if (options.error)
+					{
+						options.error(request.status);
+					}
 				}
 			}
 		};
