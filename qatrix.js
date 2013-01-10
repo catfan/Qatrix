@@ -899,7 +899,12 @@ var version = '1.0.2',
 		{
 			return mapcall(elem, function (elem)
 			{
-				elem.className = name ? $string.trim(elem.className.replace(new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '').split(rspace).join(' ')) : '';
+				elem.className = name ? $string.trim(
+					elem.className.replace(
+						new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '')
+						.split(rspace)
+						.join(' ')
+				) : '';
 				return elem;
 			});
 		}
@@ -916,7 +921,9 @@ var version = '1.0.2',
 	{
 		return mapcall(elem, function (elem)
 		{
-			$style.get(elem, 'display') === 'none' ? $show(elem, duration, callback) : $hide(elem, duration, callback);
+			$style.get(elem, 'display') === 'none' ?
+				$show(elem, duration, callback) :
+				$hide(elem, duration, callback);
 		});
 	},
 	$animate: (function ()
@@ -957,13 +964,13 @@ var version = '1.0.2',
 					if (properties[css].from !== undefined)
 					{
 						properties[css].to = properties[css].to || 0;
-						css_value[css] = !$css.number[css] ? parseInt(properties[css].to) : properties[css].to;
+						css_value[css] = !$css.number[css] ? parseInt(properties[css].to, 10) : properties[css].to;
 						unit[css] = $css.unit(css, properties[css].to);
-						$style.set(elem, css_name[css], parseInt(properties[css].from) + unit[css]);
+						$style.set(elem, css_name[css], parseInt(properties[css].from, 10) + unit[css]);
 					}
 					else
 					{
-						css_value[css] = !$css.number[css] ? parseInt(properties[css]) : properties[css];
+						css_value[css] = !$css.number[css] ? parseInt(properties[css], 10) : properties[css];
 						unit[css] = $css.unit(css, properties[css]);
 						$style.set(elem, css_name[css], $style.get(elem, css_name[css]));
 					}
@@ -1025,15 +1032,15 @@ var version = '1.0.2',
 				if (properties[css].from !== undefined)
 				{
 					property_value = properties[css].to;
-					css_from_value.push(!$css.number[css] ? parseInt(properties[css].from) : properties[css].from);
+					css_from_value.push(!$css.number[css] ? parseInt(properties[css].from, 10) : properties[css].from);
 					$style.set(elem, css_name[i], css_from_value[i] + $css.unit(css, property_value));
 				}
 				else
 				{
 					property_value = properties[css];
-					css_from_value.push(parseInt($style.get(elem, $string.camelCase(css))));
+					css_from_value.push(parseInt($style.get(elem, $string.camelCase(css)), 10));
 				}
-				css_to_value.push(!$css.number[css] ? parseInt(property_value) : property_value);
+				css_to_value.push(!$css.number[css] ? parseInt(property_value, 10) : property_value);
 				css_unit.push($css.unit(css, property_value));
 				i++;
 				length++;
@@ -1044,7 +1051,9 @@ var version = '1.0.2',
 				css_style[j] = [];
 				for (i = 0; i < length; i++)
 				{
-					css_style[j][css_name[i]] = (css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) + (css_name[i] === 'opacity' ? '' : css_unit[i]);
+					css_style[j][css_name[i]] =
+						(css_from_value[i] + (css_to_value[i] - css_from_value[i]) / p * j) +
+						(css_name[i] === 'opacity' ? '' : css_unit[i]);
 				}
 			}
 
@@ -1180,7 +1189,9 @@ var version = '1.0.2',
 						case 'object':
 							rvalue = value === null ? value :
 							// For ISO date format
-							value.getDay ? '"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1).replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
+							value.getDay ?
+								'"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1)
+									.replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
 							// For Array
 							value.length ? '[' + (function ()
 							{
@@ -1215,7 +1226,8 @@ var version = '1.0.2',
 		isJSON: function (string)
 		{
 			return typeof string === 'string' && $string.trim(string) !== '' ?
-				rvalidchars.test(string.replace(rvalidescape, '@')
+				rvalidchars.test(string
+					.replace(rvalidescape, '@')
 					.replace(rvalidtokens, ']')
 					.replace(rvalidbraces, '')) :
 				false;
