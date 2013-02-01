@@ -1,14 +1,14 @@
 /*
-	Qatrix JavaScript v1.0.2
+	Qatrix JavaScript v1.0.3 pre
 
-	Copyright (c) 2012, Angel Lai
+	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
 	For details, see the Qatrix website: http://qatrix.com
 */
 
 (function (window, document, undefined) {
 
-var version = '1.0.2',
+var version = '1.0.3 pre',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -108,18 +108,23 @@ var version = '1.0.2',
 			var prop = {},
 				show = type === 'show',
 				style = elem.style,
-				display, temp, overflow;
+				display = $data.get(elem, '_display'),
+				temp, overflow;
 
-			if (show)
+			if (!display)
 			{
-				display = $data.get(elem, '_display');
-				if (!display)
+				display = $style.get(elem, 'display');
+				if (display == 'none' || display == 'inherit')
 				{
 					temp = $append(document.body, $new(elem.nodeName));
 					display = $style.get(temp, 'display');
 					$remove(temp);
-					$data.set(elem, '_display', display);
 				}
+				$data.set(elem, '_display', display);
+			}
+
+			if (show)
+			{
 				style.display = display;
 			}
 			else
