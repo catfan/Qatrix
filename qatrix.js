@@ -17,7 +17,7 @@ var version = '1.0.3 pre',
 	rline = /\r\n/g,
 	rnum = /[\-\+0-9\.]/ig,
 	rspace = /\s+/,
-	rtrim = /(^\s*)|(\s*$)/g,
+	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 	ropacity = /opacity=([^)]*)/,
 	rvalidchars = /^[\],:{}\s]*$/,
 	rvalidescape = /\\(?:["\\\/bfnrt]|u[\da-fA-F]{4})/g,
@@ -379,14 +379,14 @@ var version = '1.0.3 pre',
 				'"': '\\"'
 			});
 		},
-		trim: String.prototype.trim ?
+		trim: "".trim ?
 		function (string)
 		{
 			return string.trim();
 		}:
 		function (string)
 		{
-			return string.replace(rtrim, '');
+			return (string + '').replace(rtrim, '');
 		}
 	},
 	$attr: {
