@@ -1322,6 +1322,10 @@ var version = '1.0.3 pre',
 		{
 			browser[key] = browser[key].test(ua);
 		}
+		browser.is = function (keyword)
+		{
+			return new RegExp(keyword, 'ig').test(ua);
+		};
 		return browser;
 	}())
 };
