@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0.3 pre
+	Qatrix JavaScript v1.1
 
 	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
@@ -8,7 +8,8 @@
 
 (function (window, document, undefined) {
 
-var version = '1.0.3 pre',
+var
+	version = '1.1',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -41,6 +42,7 @@ var version = '1.0.3 pre',
 	nodeManip = function (elem, node)
 	{
 		var type = typeof node;
+
 		if (type === 'string')
 		{
 			var doc = elem && elem.ownerDocument || document,
@@ -76,6 +78,7 @@ var version = '1.0.3 pre',
 		}
 
 		var length = match.length;
+
 		if (callback)
 		{
 			if (length !== undefined)
@@ -87,6 +90,7 @@ var version = '1.0.3 pre',
 						callback(item);
 					});
 				}
+
 				return match;
 			}
 			else
@@ -108,7 +112,7 @@ var version = '1.0.3 pre',
 			var prop = {},
 				show = type === 'show',
 				style = elem.style,
-				display = $data.get(elem, '_display'),
+				display = elem['_display'],
 				temp, overflow;
 
 			if (!display)
@@ -120,7 +124,7 @@ var version = '1.0.3 pre',
 					display = $style.get(temp, 'display');
 					$remove(temp);
 				}
-				$data.set(elem, '_display', display);
+				elem['_display'] = display;
 			}
 
 			if (show)
@@ -181,6 +185,7 @@ var version = '1.0.3 pre',
 		if (typeof data === 'object')
 		{
 			var rdata = [];
+
 			$each(data, function (key, value)
 			{
 				if (typeof value === 'object')
@@ -192,12 +197,23 @@ var version = '1.0.3 pre',
 					rdata.push(prefix + '[' + $url(key) + ']=' + value);
 				}
 			});
+
 			return rdata.join('&');
 		}
 		else
 		{
 			return $url(prefix) + '=' + $url(data);
 		}
+	},
+
+	removeEvent = document.removeEventListener ?
+	function(elem, type, fn)
+	{
+		elem.removeEventListener(type, fn, false);
+	} :
+	function(elem, type, fn)
+	{
+		elem.detachEvent('on' + type, fn);
 	},
 
 	Qatrix = {
@@ -207,6 +223,7 @@ var version = '1.0.3 pre',
 		// For more complex manipulation, use $id
 		return document.getElementById(id);
 	},
+
 	$each: function (haystack, callback)
 	{
 		var i = 0,
@@ -231,10 +248,12 @@ var version = '1.0.3 pre',
 			}
 		}
 	},
+
 	$id: function (id, callback)
 	{
 		var match = [],
 			elem;
+
 		if (typeof id === 'string')
 		{
 			elem = $(id);
@@ -242,6 +261,7 @@ var version = '1.0.3 pre',
 			{
 				callback(elem);
 			}
+
 			return elem;
 		}
 		$each(id, function (i, item)
@@ -252,29 +272,35 @@ var version = '1.0.3 pre',
 				match.push(elem);
 			}
 		});
+
 		return mapcall(match, callback);
 	},
+
 	$dom: function (dom, callback)
 	{
 		if (callback)
 		{
 			dom.length ? mapcall(dom, callback) : callback(dom);
 		}
+
 		return dom;
 	},
+
 	$tag: function (elem, name, callback)
 	{
 		return mapcall(elem.getElementsByTagName(name), callback);
 	},
+
 	$class: document.getElementsByClassName ?
 	function (elem, className, callback)
 	{
 		return mapcall(elem.getElementsByClassName(className), callback);
-	}:
+	} :
 	function (elem, className, callback)
 	{
 		var match = [],
 			rclass = new RegExp("(^|\\s)" + className + "(\\s|$)");
+
 		$tag(elem, '*', function (item)
 		{
 			if (rclass.test(item.className))
@@ -282,18 +308,21 @@ var version = '1.0.3 pre',
 				match.push(item);
 			}
 		});
+
 		return mapcall(match, callback);
 	},
+
 	$select: document.querySelectorAll ?
 	function (selector, callback)
 	{
 		return mapcall(document.querySelectorAll(selector), callback);
-	}:
+	} :
 	// Hack native CSS selector quering matched element for IE6/7
 	function (selector, callback)
 	{
 		var style = Qatrix.Qselector.styleSheet,
 			match = [];
+
 		style.addRule(selector, 'q:a');
 		$tag(document, '*', function (item)
 		{
@@ -303,11 +332,14 @@ var version = '1.0.3 pre',
 			}
 		});
 		style.cssText = '';
+
 		return mapcall(match, callback);
 	},
+
 	$new: function (tag, properties)
 	{
 		var elem = document.createElement(tag);
+
 		if (properties)
 		{
 			try
@@ -316,30 +348,31 @@ var version = '1.0.3 pre',
 				{
 					switch (name)
 					{
-					case 'css':
-					case 'style':
-						$css.set(elem, property);
-						break;
+						case 'css':
+						case 'style':
+							$css.set(elem, property);
+							break;
 
-					case 'innerHTML':
-					case 'html':
-						$html(elem, property);
-						break;
+						case 'innerHTML':
+						case 'html':
+							$html(elem, property);
+							break;
 
-					case 'className':
-					case 'class':
-						$className.set(elem, property);
-						break;
+						case 'className':
+						case 'class':
+							$className.set(elem, property);
+							break;
 
-					case 'text':
-						$text(elem, property);
-						break;
+						case 'text':
+							$text(elem, property);
+							break;
 
-					default:
-						$attr.set(elem, name, property);
-						break;
+						default:
+							$attr.set(elem, name, property);
+							break;
 					}
 				});
+
 				return elem;
 			}
 			catch (e)
@@ -350,8 +383,10 @@ var version = '1.0.3 pre',
 				elem = null;
 			}
 		}
+
 		return elem;
 	},
+
 	$string: {
 		camelCase: function (string)
 		{
@@ -360,14 +395,17 @@ var version = '1.0.3 pre',
 				return (letter + '').toUpperCase();
 			});
 		},
+
 		replace: function (string, replacements)
 		{
 			for (var key in replacements)
 			{
 				string = string.replace(new RegExp(key, 'ig'), replacements[key]);
 			}
+
 			return string;
 		},
+
 		slashes: function (string)
 		{
 			return $string.replace(string, {
@@ -379,21 +417,24 @@ var version = '1.0.3 pre',
 				'"': '\\"'
 			});
 		},
+
 		trim: "".trim ?
 		function (string)
 		{
 			return string.trim();
-		}:
+		} :
 		function (string)
 		{
 			return (string + '').replace(rtrim, '');
 		}
 	},
+
 	$attr: {
 		get: function (elem, name)
 		{
 			return elem.getAttribute(name);
 		},
+
 		set: function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
@@ -401,6 +442,7 @@ var version = '1.0.3 pre',
 				elem.setAttribute(name, value);
 			});
 		},
+
 		remove: function (elem, name)
 		{
 			return mapcall(elem, function (elem)
@@ -409,10 +451,12 @@ var version = '1.0.3 pre',
 			});
 		}
 	},
+
 	$data: {
 		get: function (elem, name)
 		{
 			var value = $attr.get(elem, 'data-' + name);
+
 			return value === "true" ? true :
 				value === "false" ? false :
 				value === "null" ? '' :
@@ -422,6 +466,7 @@ var version = '1.0.3 pre',
 				rbrace.test(value) ? $json.decode(value) :
 				value;
 		},
+
 		set: function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
@@ -431,9 +476,11 @@ var version = '1.0.3 pre',
 				{
 					$attr.set(elem, 'data-' + key, value);
 				}) : $attr.set(elem, 'data-' + name, value);
+
 				return elem;
 			});
 		},
+
 		remove: function (elem, name)
 		{
 			return mapcall(elem, function (elem)
@@ -442,27 +489,33 @@ var version = '1.0.3 pre',
 			});
 		}
 	},
+
 	$storage: window.localStorage ?
 	{
 		set: function (name, value)
 		{
 			localStorage[name] = typeof value === 'object' ? $json.encode(value) : value;
 		},
+
 		get: function (name)
 		{
 			var data = localStorage[name];
+
 			if ($json.isJSON(data))
 			{
 				return $json.decode(data);
 			}
+
 			return data || '';
 		},
+
 		remove: function (name)
 		{
 			localStorage.removeItem(name);
+
 			return true;
 		}
-	}:
+	} :
 	{
 		set: function (name, value)
 		{
@@ -470,133 +523,187 @@ var version = '1.0.3 pre',
 			$data.set(Qatrix.storage, name, value);
 			Qatrix.storage.save('Qstorage');
 		},
+
 		get: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
+
 			return $data.get(Qatrix.storage, name) || '';
 		},
+
 		remove: function (name)
 		{
 			Qatrix.storage.load('Qstorage');
 			$data.remove(Qatrix.storage, name);
+
 			return true;
 		}
 	},
+
 	$event: {
-		add: function (elem, type, handler)
+		guid: 0,
+
+		global: {},
+
+		on: function (context, types, selector, data, fn)
 		{
-			return mapcall(elem, function (elem)
+			return mapcall(context, function (elem)
 			{
-				if (typeof type === 'object')
-				{
-					$each(type, function (type, handler)
-					{
-						$event.add(elem, type, handler);
-					});
-					return elem;
-				}
-				if (elem.nodeType === 3 || elem.nodeType === 8 || !type || !handler)
+				if (elem.nodeType === 3 || elem.nodeType === 8)
 				{
 					return false;
 				}
+
+				if (typeof types === 'object')
+				{
+					if (typeof selector !== 'string')
+					{
+						data = data || selector;
+						selector = undefined;
+					}
+
+					for (type in types)
+					{
+						$event.on(elem, type, selector, data, types[type]);
+					}
+
+					return this;
+				}
+
+				if (data == null && fn == null)
+				{
+					fn = selector;
+					data = selector = undefined;
+				}
+				else if (fn == null)
+				{
+					if (typeof selector === 'string')
+					{
+						fn = data;
+						data = undefined;
+					}
+					else
+					{
+						fn = data;
+						data = selector;
+						selector = undefined;
+					}
+				}
+
+				if (elem.guid === undefined)
+				{
+					$event.guid++;
+					elem.guid = $event.guid;
+				}
+
+				var guid = $event.guid,
+					event_key = guid + '_' + (selector || '') + types,
+					events = $event.global[ event_key ];
+
+				if (!events)
+				{
+					$event.global[ event_key ] = {};
+				}
+
+				delegate_fn = function (event)
+				{
+					var target;
+
+					event.data = data;
+
+					event.target = event.target || event.srcElement || document;
+
+					event.which = event.which || event.charCode || event.keyCode;
+					
+					event.metaKey = event.metaKey || event.ctrlKey;
+
+					target = event.target;
+
+					if (!selector || (target.tagName == selector || $className.has(target, selector.replace('.', ''))))
+					{
+						if (fn === false || fn.call(target, event) === false)
+						{
+							event.stopPropagation();
+							event.preventDefault();
+						}
+					}
+				};
+
 				if (elem.addEventListener)
 				{
-					if (type === 'mouseenter' || type === 'mouseleave')
+					if (types === 'mouseenter' || types === 'mouseleave')
 					{
-						type = type === 'mouseenter' ? 'mouseover' : 'mouseout';
-						handler = $event.handler.mouseenter(handler);
+						types = types === 'mouseenter' ? 'mouseover' : 'mouseout';
+						delegate_fn = $event.handler.mouseenter(delegate_fn);
 					}
-					elem.addEventListener(type, handler, false);
+
+					elem.addEventListener(types, delegate_fn, false);
 				}
 				else
 				{
-					// Prevent attaching duplicate event with same event type and same handler for IE8-6
-					if (elem.getAttribute)
-					{
-						var handlerName = handler.toString();
-						if ($data.get(elem, 'event-' + type + '-' + handlerName))
-						{
-							return false;
-						}
-						$data.set(elem, 'event-' + type + '-' + handlerName, true);
-					}
-					elem.attachEvent('on' + type, handler);
+					elem.attachEvent('on' + types, delegate_fn);
 				}
+
+				$event.global[ event_key ][ fn.toString() ] = delegate_fn;
+
 				return elem;
 			});
 		},
-		remove: document.removeEventListener ?
-		function (elem, type, handler)
+
+		off: function (context, type, selector, fn)
 		{
-			return mapcall(elem, function (elem)
+			if (fn == null)
 			{
-				if (typeof type === 'object')
-				{
-					$each(type, function (type, handler)
-					{
-						$event.remove(elem, type, handler);
-					});
-					return elem;
-				}
-				elem.removeEventListener(type, handler, false);
-				return elem;
-			});
-		}:
-		function (elem, type, handler)
-		{
-			return mapcall(elem, function (elem)
+				fn = selector;
+				selector = null;
+			}
+
+			var event_key = context.guid + '_' + (selector || '') + type;
+				fn_key = fn.toString();
+
+			if (!fn)
 			{
-				if (typeof type === 'object')
+				$each($event.global[ event_key ], function (i, item)
 				{
-					$each(type, function (type, handler)
-					{
-						$event.remove(elem, type, handler);
-					});
-					return elem;
-				}
-				elem.detachEvent('on' + type, handler);
-				if (elem.removeAttribute)
-				{
-					$attr.remove(elem, 'event-' + type + '-' + handler.toString());
-				}
-				return elem;
-			});
+					removeEvent(context, type, item);
+				});
+				delete $event.global[ event_key ];
+			}
+			else
+			{
+				removeEvent(context, type, $event.global[ event_key ][ fn_key ]);
+				delete $event.global[ event_key ][ fn_key ];
+			}
 		},
+
 		handler: {
 			mouseenter: function (handler)
 			{
 				return function (event)
 				{
 					var target = event.relatedTarget;
+
 					if (this === target)
 					{
 						return;
 					}
+
 					while (target && target !== this)
 					{
 						target = target.parentNode;
 					}
+
 					if (target === this)
 					{
 						return;
 					}
+
 					handler.call(this, event);
 				}
 			}
-		},
-		key: function (event)
-		{
-			return event.which || event.charCode || event.keyCode;
-		},
-		metaKey: function (event)
-		{
-			return event.metaKey || event.ctrlKey;
-		},
-		target: function (event)
-		{
-			return event.target ? event.target : event.srcElement || document;
 		}
 	},
+
 	$clear: function (timer)
 	{
 		if (timer)
@@ -604,8 +711,10 @@ var version = '1.0.3 pre',
 			clearTimeout(timer);
 			clearInterval(timer);
 		}
+
 		return null;
 	},
+
 	$ready: function (callback)
 	{
 		if (document.readyState === 'complete')
@@ -616,6 +725,7 @@ var version = '1.0.3 pre',
 		{
 			readyList.push(callback);
 			document.addEventListener('DOMContentLoaded', ready, false);
+
 			return;
 		}
 		// Hack IE DOM for ready event
@@ -634,20 +744,25 @@ var version = '1.0.3 pre',
 		};
 		domready();
 	},
+
 	$css: {
 		get: function (elem, name)
 		{
 			if (typeof name === 'object')
 			{
 				var haystack = {};
+
 				$each(name, function (i, property)
 				{
 					haystack[property] = $style.get(elem, property);
 				});
+
 				return haystack;
 			}
+
 			return $style.get(elem, name);
 		},
+
 		set: function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
@@ -656,15 +771,18 @@ var version = '1.0.3 pre',
 				{
 					$style.set(elem, $string.camelCase(propertyName), $css.fix(propertyName, value));
 				}) : $style.set(elem, $string.camelCase(name), $css.fix(name, value));
+
 				return elem;
 			});
 		},
+
 		number: {
 			'fontWeight': true,
 			'lineHeight': true,
 			'opacity': true,
 			'zIndex': true
 		},
+
 		unit: function (name, value)
 		{
 			if ($css.number[name])
@@ -672,17 +790,21 @@ var version = '1.0.3 pre',
 				return '';
 			}
 			var unit = value.toString().replace(rnum, '');
+
 			return unit === '' ? 'px' : unit;
 		},
+
 		fix: function (name, value)
 		{
 			if (typeof value === 'number' && !$css.number[name])
 			{
 				value += 'px';
 			}
+
 			return value === null && isNaN(value) ? false : value;
 		}
 	},
+
 	$style: {
 		get: window.getComputedStyle ?
 		function (elem, property)
@@ -690,10 +812,12 @@ var version = '1.0.3 pre',
 			if (elem !== null)
 			{
 				var value = document.defaultView.getComputedStyle(elem, null).getPropertyValue(property);
+
 				return value === 'auto' || value === '' ? 0 : value;
 			}
+
 			return false;
-		}:
+		} :
 		function (elem, property)
 		{
 			if (elem !== null)
@@ -701,19 +825,23 @@ var version = '1.0.3 pre',
 				var value = property === 'opacity' ? ropacity.test(elem.currentStyle['filter']) ?
 					(0.01 * parseFloat(RegExp.$1)) + '' :
 					1 : elem.currentStyle[$string.camelCase(property)];
+
 				return value === 'auto' ? 0 : value;
 			}
+
 			return false;
 		},
+
 		set: document.documentElement.style.opacity !== undefined ?
 		function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
 			{
 				elem.style[name] = value;
+
 				return true;
 			});
-		}:
+		} :
 		function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
@@ -722,6 +850,7 @@ var version = '1.0.3 pre',
 				{
 					elem.style.zoom = 1;
 				}
+
 				if (name === 'opacity')
 				{
 					elem.style.filter = 'alpha(opacity=' + value * 100 + ')';
@@ -731,24 +860,29 @@ var version = '1.0.3 pre',
 				{
 					elem.style[name] = value;
 				}
+
 				return true;
 			});
 		}
 	},
+
 	$pos: function (elem, x, y)
 	{
 		return mapcall(elem, function (elem)
 		{
 			$style.set(elem, 'left', x + 'px');
 			$style.set(elem, 'top', y + 'px');
+
 			return elem;
 		});
 	},
+
 	$offset: function (elem)
 	{
 		var body = document.body,
 			doc_elem = document.documentElement,
 			box = elem.getBoundingClientRect();
+
 		return {
 			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (doc_elem.clientTop || body.clientTop || 0),
 			left: box.left + (window.scrollX || body.parentNode.scrollLeft || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
@@ -756,6 +890,7 @@ var version = '1.0.3 pre',
 			height: elem.offsetHeight
 		};
 	},
+
 	$append: function (elem, node)
 	{
 		return mapcall(elem, function (elem)
@@ -763,6 +898,7 @@ var version = '1.0.3 pre',
 			return elem.appendChild(nodeManip(elem, node));
 		});
 	},
+
 	$prepend: function (elem, node)
 	{
 		return mapcall(elem, function (elem)
@@ -770,6 +906,7 @@ var version = '1.0.3 pre',
 			return elem.firstChild ? elem.insertBefore(nodeManip(elem, node), elem.firstChild) : elem.appendChild(nodeManip(elem, node));
 		});
 	},
+
 	$before: function (elem, node)
 	{
 		return mapcall(elem, function (elem)
@@ -777,6 +914,7 @@ var version = '1.0.3 pre',
 			return elem.parentNode.insertBefore(nodeManip(elem, node), elem);
 		});
 	},
+
 	$after: function (elem, node)
 	{
 		return mapcall(elem, function (elem)
@@ -784,6 +922,7 @@ var version = '1.0.3 pre',
 			return elem.nextSibling ? elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(nodeManip(elem, node));
 		});
 	},
+
 	$remove: function (elem)
 	{
 		return mapcall(elem, function (elem)
@@ -791,6 +930,7 @@ var version = '1.0.3 pre',
 			return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 		});
 	},
+
 	$empty: function (elem)
 	{
 		// Directly setting the innerHTML attribute to blank will release memory for browser
@@ -798,9 +938,11 @@ var version = '1.0.3 pre',
 		return mapcall(elem, function (elem)
 		{
 			elem.innerHTML = '';
+
 			return elem;
 		});
 	},
+
 	$html: function (elem, html)
 	{
 		return mapcall(elem, function (elem)
@@ -817,9 +959,11 @@ var version = '1.0.3 pre',
 				}
 				return elem;
 			}
+
 			return elem.nodeType === 1 ? elem.innerHTML : null;
 		});
 	},
+
 	$text: function (elem, text)
 	{
 		// Retrieve the text value
@@ -832,6 +976,7 @@ var version = '1.0.3 pre',
 				// Set text node.
 				$empty(elem);
 				elem.appendChild(document.createTextNode(text));
+
 				return elem;
 			}
 			else
@@ -839,6 +984,7 @@ var version = '1.0.3 pre',
 				var rtext = '',
 					textContent = elem.textContent,
 					nodeType;
+
 				// If the content of elem is text only
 				if ((textContent || elem.innerText) === elem.innerHTML)
 				{
@@ -849,20 +995,24 @@ var version = '1.0.3 pre',
 					for (elem = elem.firstChild; elem; elem = elem.nextSibling)
 					{
 						nodeType = elem.nodeType;
+
 						if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
 						{
 							rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
 						}
+
 						if (nodeType === 1 || nodeType === 2)
 						{
 							rtext += $text(elem) + ($style.get(elem, 'display') === 'block' || elem.tagName.toLowerCase() === 'br' ? "\n" : '');
 						}
 					}
 				}
+
 				return rtext;
 			}
 		});
 	},
+
 	$className: {
 		add: function (elem, name)
 		{
@@ -876,6 +1026,7 @@ var version = '1.0.3 pre',
 				{
 					var ori = elem.className,
 						nclass = [];
+
 					$each(name.split(rspace), function (i, item)
 					{
 						if (!new RegExp('\\b(' + item + ')\\b').test(ori))
@@ -885,21 +1036,26 @@ var version = '1.0.3 pre',
 					});
 					elem.className += nclass.join('');
 				}
+
 				return elem;
 			});
 		},
+
 		set: function (elem, name)
 		{
 			return mapcall(elem, function (elem)
 			{
 				elem.className = name;
+
 				return elem;
 			});
 		},
+
 		has: function (elem, name)
 		{
 			return new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b').test(elem.className);
 		},
+
 		remove: function (elem, name)
 		{
 			return mapcall(elem, function (elem)
@@ -910,18 +1066,22 @@ var version = '1.0.3 pre',
 						.split(rspace)
 						.join(' ')
 				) : '';
+
 				return elem;
 			});
 		}
 	},
+
 	$hide: function (elem, duration, callback)
 	{
 		displayElem(elem, 'hide', duration, callback);
 	},
+
 	$show: function (elem, duration, callback)
 	{
 		displayElem(elem, 'show', duration, callback);
 	},
+
 	$toggle: function (elem, duration, callback)
 	{
 		return mapcall(elem, function (elem)
@@ -931,10 +1091,12 @@ var version = '1.0.3 pre',
 				$hide(elem, duration, callback);
 		});
 	},
+
 	$animate: (function ()
 	{
 		// Use CSS3 native transition for animation as possible
 		var style = document.documentElement.style;
+
 		return (
 			style.webkitTransition !== undefined ||
 			style.MozTransition !== undefined ||
@@ -952,6 +1114,7 @@ var version = '1.0.3 pre',
 				style.MsTransition !== undefined ? 'ms' : '',
 			transition_name = prefix_name + 'Transition',
 			transform_name = prefix_name + 'Transform';
+
 		return function (elem, properties, duration, callback)
 		{
 			return mapcall(elem, function (elem)
@@ -1004,6 +1167,7 @@ var version = '1.0.3 pre',
 				{
 					// Clear up CSS transition property
 					style[transition_name] = style[transform_name] = '';
+
 					if (callback)
 					{
 						callback(elem);
@@ -1013,7 +1177,7 @@ var version = '1.0.3 pre',
 				return elem;
 			});
 		}
-	})():
+	})() :
 	function (elem, properties, duration, callback)
 	{
 		return mapcall(elem, function (elem)
@@ -1029,6 +1193,7 @@ var version = '1.0.3 pre',
 				css_unit = [],
 				css_style = [],
 				property_value, css, offset, timer;
+
 			duration = duration || 300;
 
 			for (css in properties)
@@ -1085,9 +1250,11 @@ var version = '1.0.3 pre',
 					callback(elem);
 				}
 			}, duration);
+
 			return elem;
 		});
 	},
+
 	$fadeout: function (elem, duration, callback)
 	{
 		return mapcall(elem, function (elem)
@@ -1119,22 +1286,27 @@ var version = '1.0.3 pre',
 				i = 0,
 				l = cookies.length,
 				temp, value;
+
 			for (; i < l; i++)
 			{
 				temp = cookies[i].split('=');
 				if (temp[0] === key)
 				{
 					value = decodeURIComponent(temp[1]);
+
 					return $json.isJSON(value) ? $json.decode(value) : value.toString();
 				}
 			}
+
 			return null;
 		},
+
 		set: function (key, value, expires)
 		{
 			if (typeof key === 'object')
 			{
 				expires = value;
+
 				return $each(key, function (name, value)
 				{
 					$cookie.set(name, value, expires);
@@ -1142,9 +1314,9 @@ var version = '1.0.3 pre',
 			}
 
 			var today = new Date();
+
 			today.setTime(today.getTime());
 			expires = expires ? ';expires=' + new Date(today.getTime() + expires * 86400000).toGMTString() : '';
-
 			value = typeof value === 'object' ? $json.encode(value) : value;
 
 			return document.cookie = key + '=' + $url(value) + expires + ';path=/';
@@ -1155,6 +1327,7 @@ var version = '1.0.3 pre',
 			{
 				$cookie.set(key, '', -1);
 			});
+
 			return true;
 		}
 	},
@@ -1163,71 +1336,82 @@ var version = '1.0.3 pre',
 		function (data)
 		{
 			return $json.isJSON(data) ? JSON.parse($string.trim(data)) : false;
-		}:
+		} :
 		function (data)
 		{
 			return $json.isJSON(data) ? (new Function('return ' + $string.trim(data)))() : false;
 		},
+
 		encode: window.JSON ?
 		function (data)
 		{
 			return JSON.stringify(data);
-		}:
+		} :
 		function (data)
 		{
 			function stringify(data)
 			{
 				var temp = [],
 					i, type, value, rvalue;
+
 				for (i in data)
 				{
 					value = data[i];
 					type = typeof value;
+
 					if (type === 'undefined')
 					{
 						return;
 					}
+
 					if (type !== 'function')
 					{
 						switch (type)
 						{
-						case 'object':
-							rvalue = value === null ? value :
-							// For ISO date format
-							value.getDay ?
-								'"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1)
-									.replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
-							// For Array
-							value.length ? '[' + (function ()
-							{
-								var rdata = [];
-								$each(value, function (i, item)
+							case 'object':
+								rvalue = value === null ? value :
+								// For ISO date format
+								value.getDay ?
+									'"' + (1e3 - ~value.getUTCMonth() * 10 + value.toUTCString() + 1e3 + value / 1)
+										.replace(/1(..).*?(\d\d)\D+(\d+).(\S+).*(...)/, '$3-$1-$2T$4.$5Z') + '"' :
+								// For Array
+								value.length ? '[' + (function ()
 								{
-									rdata.push((typeof item === 'string' ? '"' + $string.slashes(item) + '"' : item));
-								});
-								return rdata.join(',');
-							})() + ']' :
-							// For Object
-							$json.encode(value);
-							break;
-						case 'number':
-							rvalue = !isFinite(value) ? null : value;
-							break;
-						case 'boolean':
-						case 'null':
-							rvalue = value;
-							break;
-						case 'string':
-							rvalue = '"' + $string.slashes(value) + '"';
-							break;
+									var rdata = [];
+									$each(value, function (i, item)
+									{
+										rdata.push((typeof item === 'string' ? '"' + $string.slashes(item) + '"' : item));
+									});
+
+									return rdata.join(',');
+								})() + ']' :
+								// For Object
+								$json.encode(value);
+								break;
+
+							case 'number':
+								rvalue = !isFinite(value) ? null : value;
+								break;
+
+							case 'boolean':
+							case 'null':
+								rvalue = value;
+								break;
+
+							case 'string':
+								rvalue = '"' + $string.slashes(value) + '"';
+								break;
 						}
 						temp.push('"' + i + '"' + ':' + rvalue);
 					}
 				}
+
 				return temp.join(',');
 			}
+
 			return '{' + stringify(data) + '}';
 		},
+
 		isJSON: function (string)
 		{
 			return typeof string === 'string' && $string.trim(string) !== '' ?
@@ -1238,6 +1422,7 @@ var version = '1.0.3 pre',
 				false;
 		}
 	},
+
 	$ajax: function (url, options)
 	{
 		if (typeof url === 'object')
@@ -1245,12 +1430,16 @@ var version = '1.0.3 pre',
 			options = url;
 			url = undefined;
 		}
+
 		options = options || {};
+
 		var request = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
 			param = [],
 			response;
+
 		request.open(options.type || 'POST', url || options.url, true);
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
 		if (options.header)
 		{
 			$each(options.header, function (key, value)
@@ -1258,6 +1447,7 @@ var version = '1.0.3 pre',
 				request.setRequestHeader(key, value);
 			});
 		}
+
 		if (options.data)
 		{
 			$each(options.data, function (key, value)
@@ -1265,6 +1455,7 @@ var version = '1.0.3 pre',
 				param.push(addParam(key, value));
 			});
 		}
+
 		request.send(param.join('&').replace(/%20/g, '+'));
 		request.onreadystatechange = function ()
 		{
@@ -1285,6 +1476,7 @@ var version = '1.0.3 pre',
 			}
 		};
 	},
+
 	$loadscript: function (src)
 	{
 		return $prepend(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
@@ -1318,14 +1510,17 @@ var version = '1.0.3 pre',
 				android: /android/
 			},
 			key;
+
 		for (key in browser)
 		{
 			browser[key] = browser[key].test(ua);
 		}
+
 		browser.is = function (keyword)
 		{
 			return new RegExp(keyword, 'ig').test(ua);
 		};
+
 		return browser;
 	}())
 };
