@@ -656,7 +656,7 @@ var
 			{
 				for (type in types)
 				{
-					$event.off(elem, type, types[type]);
+					$event.off(context, type, types[type]);
 				}
 				return this;
 			}
