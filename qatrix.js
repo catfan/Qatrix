@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.1
+	Qatrix JavaScript v1.0.3 pre
 
 	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
@@ -9,7 +9,7 @@
 (function (window, document, undefined) {
 
 var
-	version = '1.1',
+	version = '1.0.3 pre',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -596,7 +596,7 @@ var
 					elem.guid = $event.guid;
 				}
 
-				var guid = $event.guid,
+				var guid = elem.guid,
 					event_key = guid + '_' + (selector || '') + types,
 					events = $event.global[ event_key ];
 
@@ -619,7 +619,7 @@ var
 
 					target = event.target;
 
-					if (!selector || (target.tagName == selector || $className.has(target, selector.replace('.', ''))))
+					if (!selector || (target.tagName === selector || $className.has(target, selector.replace('.', ''))))
 					{
 						if (fn === false || fn.call(target, event) === false)
 						{
@@ -650,28 +650,37 @@ var
 			});
 		},
 
-		off: function (context, type, selector, fn)
+		off: function (context, types, selector, fn)
 		{
+			if (typeof types === 'object')
+			{
+				for (type in types)
+				{
+					$event.off(elem, type, types[type]);
+				}
+				return this;
+			}
+
 			if (fn == null)
 			{
 				fn = selector;
 				selector = null;
 			}
 
-			var event_key = context.guid + '_' + (selector || '') + type;
+			var event_key = context.guid + '_' + (selector || '') + types;
 				fn_key = fn.toString();
 
 			if (!fn)
 			{
 				$each($event.global[ event_key ], function (i, item)
 				{
-					removeEvent(context, type, item);
+					removeEvent(context, types, item);
 				});
 				delete $event.global[ event_key ];
 			}
 			else
 			{
-				removeEvent(context, type, $event.global[ event_key ][ fn_key ]);
+				removeEvent(context, types, $event.global[ event_key ][ fn_key ]);
 				delete $event.global[ event_key ][ fn_key ];
 			}
 		},
