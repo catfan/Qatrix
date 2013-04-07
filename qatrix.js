@@ -567,7 +567,7 @@ var
 				}
 			},
 
-			originalEvent: function ()
+			stopPropagation: function ()
 			{
 				var original = this.originalEvent;
 
