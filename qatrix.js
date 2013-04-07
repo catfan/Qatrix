@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.0.3 pre
+	Qatrix JavaScript v1.1
 
 	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
@@ -9,7 +9,7 @@
 (function (window, document, undefined) {
 
 var
-	version = '1.0.3 pre',
+	version = '1.1',
 
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
@@ -545,6 +545,69 @@ var
 
 		global: {},
 
+		handler: {
+			call: function (event, target, delegate_event, fn)
+			{
+				delegate_event.currentTarget = target;
+
+				if (fn === false || fn.call(target, delegate_event) === false)
+				{
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			},
+
+			preventDefault: function ()
+			{
+				var original = this.originalEvent;
+
+				if (original.preventDefault)
+				{
+					original.preventDefault();
+				}
+			},
+
+			originalEvent: function ()
+			{
+				var original = this.originalEvent;
+
+				if (original.stopPropagation)
+				{
+					original.stopPropagation();
+				}
+			},
+
+			stopImmediatePropagation: function()
+			{
+				this.stopPropagation();
+			},
+
+			mouseenter: function (handler)
+			{
+				return function (event)
+				{
+					var target = event.relatedTarget;
+
+					if (this === target)
+					{
+						return;
+					}
+
+					while (target && target !== this)
+					{
+						target = target.parentNode;
+					}
+
+					if (target === this)
+					{
+						return;
+					}
+
+					handler.call(this, event);
+				}
+			}
+		},
+
 		on: function (context, types, selector, data, fn)
 		{
 			return mapcall(context, function (elem)
@@ -594,37 +657,65 @@ var
 				{
 					$event.guid++;
 					elem.guid = $event.guid;
+					$event.global[ $event.guid ] = {};
 				}
 
 				var guid = elem.guid,
-					event_key = guid + '_' + (selector || '') + types,
-					events = $event.global[ event_key ];
+					event_key = (selector || '') + types,
+					events = $event.global[ guid ][ event_key ];
 
 				if (!events)
 				{
-					$event.global[ event_key ] = {};
+					$event.global[ guid ][ event_key ] = {};
 				}
 
 				delegate_fn = function (event)
 				{
-					var target;
+					var delegate_event = {},
+						match = null,
+						classSelector,
+						event_prop = 'altKey bubbles button buttons cancelable currentTarget relatedTarget clientX clientY ctrlKey fromElement offsetX offsetY pageX pageY screenX screenY shiftKey toElement stopPropagation preventDefault'.split(' '),
+						target;
 
-					event.data = data;
-
-					event.target = event.target || event.srcElement || document;
-
-					event.which = event.which || event.charCode || event.keyCode;
-					
-					event.metaKey = event.metaKey || event.ctrlKey;
-
-					target = event.target;
-
-					if (!selector || (target.tagName === selector || $className.has(target, selector.replace('.', ''))))
+					$each(event_prop, function (i, key)
 					{
-						if (fn === false || fn.call(target, event) === false)
+						delegate_event[key] = event[key];
+					});
+					delegate_event.originalEvent = event;
+					delegate_event.preventDefault = $event.handler.preventDefault;
+					delegate_event.stopPropagation = $event.handler.stopPropagation;
+					delegate_event.stopImmediatePropagation = $event.handler.stopImmediatePropagation;
+
+					delegate_event.data = data;
+
+					target = delegate_event.target = !selector ? elem : event.target || event.srcElement || document;
+
+					delegate_event.which = event.which || event.charCode || event.keyCode;
+					
+					delegate_event.metaKey = event.metaKey || event.ctrlKey;
+
+					if (!selector && this === target)
+					{
+						$event.handler.call(event, target, delegate_event, fn);
+					}
+					else
+					{
+						classSelector = selector ? selector.replace('.', '') : '';
+
+						for (; target != this; target = target.parentNode || this)
 						{
-							event.stopPropagation();
-							event.preventDefault();
+							if (target.tagName.toLowerCase() === selector || $className.has(target, classSelector))
+							{
+								$event.handler.call(event, target, delegate_event, fn);
+								break;
+							}
+							else
+							{
+								if (target === document.body)
+								{
+									break;
+								}
+							}
 						}
 					}
 				};
@@ -644,7 +735,7 @@ var
 					elem.attachEvent('on' + types, delegate_fn);
 				}
 
-				$event.global[ event_key ][ fn.toString() ] = delegate_fn;
+				$event.global[ guid ][ event_key ][ fn.toString() ] = delegate_fn;
 
 				return elem;
 			});
@@ -667,48 +758,22 @@ var
 				selector = null;
 			}
 
-			var event_key = context.guid + '_' + (selector || '') + types;
+			var guid = context.guid,
+				event_key = (selector || '') + types;
 				fn_key = fn.toString();
 
 			if (!fn)
 			{
-				$each($event.global[ event_key ], function (i, item)
+				$each($event.global[ guid ][ event_key ], function (i, item)
 				{
 					removeEvent(context, types, item);
 				});
-				delete $event.global[ event_key ];
+				delete $event.global[ guid ][ event_key ];
 			}
 			else
 			{
-				removeEvent(context, types, $event.global[ event_key ][ fn_key ]);
-				delete $event.global[ event_key ][ fn_key ];
-			}
-		},
-
-		handler: {
-			mouseenter: function (handler)
-			{
-				return function (event)
-				{
-					var target = event.relatedTarget;
-
-					if (this === target)
-					{
-						return;
-					}
-
-					while (target && target !== this)
-					{
-						target = target.parentNode;
-					}
-
-					if (target === this)
-					{
-						return;
-					}
-
-					handler.call(this, event);
-				}
+				removeEvent(context, types, $event.global[ guid ][ event_key ][ fn_key ]);
+				delete $event.global[ guid ][ event_key ][ fn_key ];
 			}
 		}
 	},
@@ -1276,6 +1341,7 @@ var
 			}, duration || 500, callback);
 		});
 	},
+	
 	$fadein: function (elem, duration, callback)
 	{
 		return mapcall(elem, function (elem)
@@ -1288,6 +1354,7 @@ var
 			}, duration || 500, callback);
 		});
 	},
+
 	$cookie: {
 		get: function (key)
 		{
@@ -1330,6 +1397,7 @@ var
 
 			return document.cookie = key + '=' + $url(value) + expires + ';path=/';
 		},
+
 		remove: function ()
 		{
 			$each(arguments, function (i, key)
@@ -1340,6 +1408,7 @@ var
 			return true;
 		}
 	},
+
 	$json: {
 		decode: window.JSON ?
 		function (data)
@@ -1494,14 +1563,17 @@ var
 			'src': src
 		}));
 	},
+
 	$url: function (data)
 	{
 		return encodeURIComponent(data);
 	},
+
 	$rand: function (min, max)
 	{
 		return Math.floor(Math.random() * (max - min + 1) + min);
 	},
+
 	$browser: (function(){
 		var ua = navigator.userAgent.toLowerCase(),
 			browser = {
