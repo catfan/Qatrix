@@ -264,6 +264,7 @@ var
 
 			return elem;
 		}
+
 		$each(id, function (i, item)
 		{
 			elem = $(item);
@@ -674,7 +675,7 @@ var
 					var delegate_event = {},
 						match = null,
 						classSelector,
-						event_prop = 'altKey bubbles button buttons cancelable currentTarget relatedTarget clientX clientY ctrlKey fromElement offsetX offsetY pageX pageY screenX screenY shiftKey toElement stopPropagation preventDefault'.split(' '),
+						event_prop = 'altKey bubbles button buttons cancelable currentTarget relatedTarget clientX clientY ctrlKey fromElement offsetX offsetY pageX pageY screenX screenY shiftKey toElement stopPropagation preventDefault timeStamp'.split(' '),
 						target;
 
 					$each(event_prop, function (i, key)
@@ -977,7 +978,9 @@ var
 	{
 		return mapcall(elem, function (elem)
 		{
-			return elem.firstChild ? elem.insertBefore(nodeManip(elem, node), elem.firstChild) : elem.appendChild(nodeManip(elem, node));
+			return elem.firstChild ?
+				elem.insertBefore(nodeManip(elem, node), elem.firstChild) :
+				elem.appendChild(nodeManip(elem, node));
 		});
 	},
 
@@ -993,7 +996,9 @@ var
 	{
 		return mapcall(elem, function (elem)
 		{
-			return elem.nextSibling ? elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) : elem.parentNode.appendChild(nodeManip(elem, node));
+			return elem.nextSibling ?
+				elem.parentNode.insertBefore(nodeManip(elem, node), elem.nextSibling) :
+				elem.parentNode.appendChild(nodeManip(elem, node));
 		});
 	},
 
@@ -1001,18 +1006,29 @@ var
 	{
 		return mapcall(elem, function (elem)
 		{
+			$empty(elem);
+			if (elem.guid !== undefined)
+			{
+				delete $event.global[elem.guid];
+			}
+
 			return elem !== null && elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
 		});
 	},
 
 	$empty: function (elem)
 	{
-		// Directly setting the innerHTML attribute to blank will release memory for browser
-		// Only remove the childNodes will not able to do this for some browsers
 		return mapcall(elem, function (elem)
 		{
-			elem.innerHTML = '';
-
+			while (elem.firstChild)
+			{
+				if (elem.nodeType === 1 && elem.guid !== undefined)
+				{
+					delete $event.global[elem.guid];
+				}
+				elem.removeChild(elem.firstChild);
+			}
+			
 			return elem;
 		});
 	},
