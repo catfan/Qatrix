@@ -18,6 +18,7 @@ var
 	rline = /\r\n/g,
 	rnum = /[\-\+0-9\.]/ig,
 	rspace = /\s+/,
+	rquery = /\?/,
 	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 	ropacity = /opacity=([^)]*)/,
 	rvalidchars = /^[\],:{}\s]*$/,
@@ -194,7 +195,7 @@ var
 				}
 				else
 				{
-					rdata.push(prefix + '[' + $url(key) + ']=' + value);
+					rdata.push(prefix + '[' + $url(key) + ']=' + $url(value));
 				}
 			});
 
@@ -1528,10 +1529,30 @@ var
 		options = options || {};
 
 		var request = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
+			url = url || options.url,
 			param = [],
-			response;
+			response,
+			data;
 
-		request.open(options.type || 'POST', url || options.url, true);
+		if (options.data)
+		{
+			$each(options.data, function (key, value)
+			{
+				param.push(addParam(key, value));
+			});
+		}
+		data = param.join('&').replace(/%20/g, '+');
+
+		if (options.type === 'GET')
+		{
+			request.open('GET', url + (rquery.test(url) ? '&' : '?') + data, true);
+			data = null;
+		}
+		else
+		{	
+			request.open(options.type || 'POST', url, true);
+		}
+
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 
 		if (options.header)
@@ -1542,15 +1563,7 @@ var
 			});
 		}
 
-		if (options.data)
-		{
-			$each(options.data, function (key, value)
-			{
-				param.push(addParam(key, value));
-			});
-		}
-
-		request.send(param.join('&').replace(/%20/g, '+'));
+		request.send(data);
 		request.onreadystatechange = function ()
 		{
 			if (request.readyState === 4)
