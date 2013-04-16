@@ -231,22 +231,29 @@ var
 			length = haystack.length,
 			name;
 
-		if (length !== undefined)
+		if (haystack instanceof Array || haystack instanceof Object)
 		{
-			for (; i < length;)
+			if (length !== undefined)
 			{
-				if (callback.call(haystack[i], i, haystack[i++]) === false)
+				for (; i < length;)
 				{
-					break;
+					if (callback.call(haystack[i], i, haystack[i++]) === false)
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				for (name in haystack)
+				{
+					callback.call(haystack[name], name, haystack[name]);
 				}
 			}
 		}
 		else
 		{
-			for (name in haystack)
-			{
-				callback.call(haystack[name], name, haystack[name]);
-			}
+			callback(null, haystack);
 		}
 	},
 
@@ -255,18 +262,7 @@ var
 		var match = [],
 			elem;
 
-		if (typeof id === 'string')
-		{
-			elem = $(id);
-			if (elem !== null && callback)
-			{
-				callback(elem);
-			}
-
-			return elem;
-		}
-
-		$each(id, function (i, item)
+		$each(id.split(' '), function (i, item)
 		{
 			elem = $(item);
 			if (elem !== null)
@@ -1584,13 +1580,26 @@ var
 		};
 	},
 
-	$loadscript: function (src)
+	$require: function (context, callback)
 	{
-		return $prepend(document.head || document.getElementsByTagName('head')[0] || document.documentElement, $new('script', {
-			'type': 'text/javascript',
-			'async': true,
-			'src': src
-		}));
+		$each(context, function (i, src)
+		{
+			$prepend(document.head || document.getElementsByTagName('head')[0] || document.documentElement,
+				/\.css/ig.test(src) ?
+
+				$new('link', {
+					'type': 'text/css',
+					'rel': 'stylesheet',
+					'href': src
+				}) :
+				
+				$new('script', {
+					'type': 'text/javascript',
+					'async': true,
+					'src': src
+				})
+			);
+		});
 	},
 
 	$url: function (data)
