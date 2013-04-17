@@ -1582,10 +1582,13 @@ var
 
 	$require: function (context, callback)
 	{
+		var queue = [],
+			item;
+
 		$each(context, function (i, src)
 		{
-			$prepend(document.head || document.getElementsByTagName('head')[0] || document.documentElement,
-				/\.css/ig.test(src) ?
+			queue.push(src);
+			item = /\.css[^\.]*$/ig.test(src) ?
 
 				$new('link', {
 					'type': 'text/css',
@@ -1597,8 +1600,20 @@ var
 					'type': 'text/javascript',
 					'async': true,
 					'src': src
-				})
-			);
+				});
+
+			item.onload = item.onreadystatechange = function (event)
+			{
+				if (event.type === 'load' || (/loaded|complete/.test(item.readyState)))
+				{
+					queue.splice(queue.indexOf(src), 1);
+					if (queue.length === 0)
+					{
+						callback();
+					}
+				}
+			};
+			$append(document.head || document.getElementsByTagName('head')[0] || document.documentElement, item);
 		});
 	},
 
