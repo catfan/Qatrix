@@ -1607,7 +1607,7 @@ var
 				if (event.type === 'load' || (/loaded|complete/.test(item.readyState)))
 				{
 					queue.splice(queue.indexOf(src), 1);
-					if (queue.length === 0)
+					if (queue.length === 0 && callback)
 					{
 						callback();
 					}
