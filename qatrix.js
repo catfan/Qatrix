@@ -11,6 +11,8 @@
 var
 	version = '1.1',
 
+	docElem = document.documentElement,
+
 	rbline = /(^\n+)|(\n+$)/g,
 	rbrace = /^(?:\{.*\}|\[.*\])$/,
 	rcamelCase = /-([a-z])/ig,
@@ -19,7 +21,6 @@ var
 	rnum = /[\-\+0-9\.]/ig,
 	rspace = /\s+/,
 	rquery = /\?/,
-	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 	ropacity = /opacity=([^)]*)/,
 	rvalidchars = /^[\],:{}\s]*$/,
 	rvalidescape = /\\(?:["\\\/bfnrt]|u[\da-fA-F]{4})/g,
@@ -28,6 +29,9 @@ var
 
 	animDisplay = ['height', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'],
 	
+	// For $require loaded resource
+	require_loaded = {},
+
 	// For DOM ready
 	readyList = [],
 	ready = function ()
@@ -80,28 +84,21 @@ var
 
 		var length = match.length;
 
-		if (callback)
+		if (length !== undefined)
 		{
-			if (length !== undefined)
+			if (length > 0)
 			{
-				if (length > 0)
+				$each(match, function (i, item)
 				{
-					$each(match, function (i, item)
-					{
-						callback(item);
-					});
-				}
+					callback(item);
+				});
+			}
 
-				return match;
-			}
-			else
-			{
-			 	return callback(match);
-			}
+			return match;
 		}
 		else
 		{
-			return match;
+			return callback(match);
 		}
 	},
 
@@ -423,7 +420,7 @@ var
 		} :
 		function (string)
 		{
-			return (string + '').replace(rtrim, '');
+			return (string + '').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 		}
 	},
 
@@ -805,7 +802,7 @@ var
 		{
 			try
 			{
-				document.documentElement.doScroll('left');
+				docElem.doScroll('left');
 			}
 			catch (e)
 			{
@@ -904,7 +901,7 @@ var
 			return false;
 		},
 
-		set: document.documentElement.style.opacity !== undefined ?
+		set: docElem.style.opacity !== undefined ?
 		function (elem, name, value)
 		{
 			return mapcall(elem, function (elem)
@@ -952,12 +949,11 @@ var
 	$offset: function (elem)
 	{
 		var body = document.body,
-			doc_elem = document.documentElement,
 			box = elem.getBoundingClientRect();
 
 		return {
-			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (doc_elem.clientTop || body.clientTop || 0),
-			left: box.left + (window.scrollX || body.parentNode.scrollLeft || elem.scrollLeft) - (doc_elem.clientLeft || body.clientLeft || 0),
+			top: box.top + (window.scrollY || body.parentNode.scrollTop || elem.scrollTop) - (docElem.clientTop || body.clientTop || 0),
+			left: box.left + (window.scrollX || body.parentNode.scrollLeft || elem.scrollLeft) - (docElem.clientLeft || body.clientLeft || 0),
 			width: elem.offsetWidth,
 			height: elem.offsetHeight
 		};
@@ -1182,7 +1178,7 @@ var
 	$animate: (function ()
 	{
 		// Use CSS3 native transition for animation as possible
-		var style = document.documentElement.style;
+		var style = docElem.style;
 
 		return (
 			style.webkitTransition !== undefined ||
@@ -1194,7 +1190,7 @@ var
 	}()) ?
 	(function ()
 	{
-		var style = document.documentElement.style,
+		var style = docElem.style,
 			prefix_name = style.webkitTransition !== undefined ? 'Webkit' :
 				style.MozTransition !== undefined ? 'Moz' :
 				style.OTransition !== undefined ? 'O' :
@@ -1587,33 +1583,37 @@ var
 
 		$each(context, function (i, src)
 		{
-			queue.push(src);
-			item = /\.css[^\.]*$/ig.test(src) ?
-
-				$new('link', {
-					'type': 'text/css',
-					'rel': 'stylesheet',
-					'href': src
-				}) :
-				
-				$new('script', {
-					'type': 'text/javascript',
-					'async': true,
-					'src': src
-				});
-
-			item.onload = item.onreadystatechange = function (event)
+			if (!require_loaded[src])
 			{
-				if (event.type === 'load' || (/loaded|complete/.test(item.readyState)))
+				require_loaded[src] = true;
+				queue.push(src);
+				item = /\.css[^\.]*$/ig.test(src) ?
+
+					$new('link', {
+						'type': 'text/css',
+						'rel': 'stylesheet',
+						'href': src
+					}) :
+					
+					$new('script', {
+						'type': 'text/javascript',
+						'async': true,
+						'src': src
+					});
+
+				item.onload = item.onreadystatechange = function (event)
 				{
-					queue.splice(queue.indexOf(src), 1);
-					if (queue.length === 0 && callback)
+					if (event.type === 'load' || (/loaded|complete/.test(item.readyState)))
 					{
-						callback();
+						queue.splice(queue.indexOf(src), 1);
+						if (queue.length === 0 && callback)
+						{
+							callback();
+						}
 					}
-				}
-			};
-			$append(document.head || document.getElementsByTagName('head')[0] || document.documentElement, item);
+				};
+				$append(document.head || document.getElementsByTagName('head')[0] || docElem, item);
+			}
 		});
 	},
 
