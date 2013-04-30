@@ -674,7 +674,10 @@ var
 
 					$each(event_prop, function (i, key)
 					{
-						delegate_event[key] = event[key];
+						if (event[key] !== undefined)
+						{
+							delegate_event[key] = event[key];
+						}
 					});
 					delegate_event.originalEvent = event;
 					delegate_event.preventDefault = $event.handler.preventDefault;
@@ -723,7 +726,7 @@ var
 						delegate_fn = $event.handler.mouseenter(delegate_fn);
 					}
 
-					elem.addEventListener(types, delegate_fn, false);
+					elem.addEventListener(types, delegate_fn, (types === 'blur' || types === 'focus'));
 				}
 				else
 				{
@@ -1195,8 +1198,7 @@ var
 				style.MozTransition !== undefined ? 'Moz' :
 				style.OTransition !== undefined ? 'O' :
 				style.MsTransition !== undefined ? 'ms' : '',
-			transition_name = prefix_name + 'Transition',
-			transform_name = prefix_name + 'Transform';
+			transition_name = prefix_name + 'Transition';
 
 		return function (elem, properties, duration, callback)
 		{
@@ -1232,12 +1234,6 @@ var
 				{
 					style[transition_name] = 'all ' + duration + 'ms';
 					
-					// Using CSS3 transform function will enable hardware acceleration to handle this animation
-					if (properties['left'] || properties['top'])
-					{
-						style[transform_name] = 'translateZ(0)';
-					}
-
 					$each(css_style, function (i, css)
 					{
 						style[css_name[css]] = css_value[css] + unit[css];
@@ -1249,7 +1245,7 @@ var
 				setTimeout(function ()
 				{
 					// Clear up CSS transition property
-					style[transition_name] = style[transform_name] = '';
+					style[transition_name] = '';
 
 					if (callback)
 					{
