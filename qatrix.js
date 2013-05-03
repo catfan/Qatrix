@@ -82,6 +82,11 @@ var
 			return;
 		}
 
+		if (callback === undefined)
+		{
+			return match;
+		}
+
 		var length = match.length;
 
 		if (length !== undefined)
@@ -574,7 +579,7 @@ var
 
 			stopImmediatePropagation: function()
 			{
-				this.stopPropagation();
+				this.originalEvent.stopPropagation();
 			},
 
 			mouseenter: function (handler)
@@ -1084,7 +1089,7 @@ var
 
 						if (nodeType === 3 && $string.trim(elem.nodeValue) !== '')
 						{
-							rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
+							rtext += elem.nodeValue.replace(rbline, '') + (elem.nextSibling && elem.nextSibling.tagName && elem.nextSibling.tagName.toLowerCase() !== 'br' ? "\n" : '');
 						}
 
 						if (nodeType === 1 || nodeType === 2)
