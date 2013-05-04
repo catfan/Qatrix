@@ -230,33 +230,28 @@ var
 	$each: function (haystack, callback)
 	{
 		var i = 0,
-			length = haystack.length,
+			length,
 			name;
 
-		if (haystack instanceof Array || haystack instanceof Object)
+		if (haystack instanceof Array)
 		{
-			if (length !== undefined)
+			for (length = haystack.length; i < length;)
 			{
-				for (; i < length;)
+				if (callback.call(haystack[i], i, haystack[i++]) === false)
 				{
-					if (callback.call(haystack[i], i, haystack[i++]) === false)
-					{
-						break;
-					}
-				}
-			}
-			else
-			{
-				for (name in haystack)
-				{
-					callback.call(haystack[name], name, haystack[name]);
+					break;
 				}
 			}
 		}
-		else
+		if (haystack instanceof Object)
 		{
-			callback(null, haystack);
+			for (name in haystack)
+			{
+				callback.call(haystack[name], name, haystack[name]);
+			}
 		}
+
+		return haystack;
 	},
 
 	$id: function (id, callback)
@@ -579,7 +574,7 @@ var
 
 			stopImmediatePropagation: function()
 			{
-				this.originalEvent.stopPropagation();
+				this.stopPropagation();
 			},
 
 			mouseenter: function (handler)
@@ -674,7 +669,7 @@ var
 					var delegate_event = {},
 						match = null,
 						classSelector,
-						event_prop = 'altKey bubbles button buttons cancelable currentTarget relatedTarget clientX clientY ctrlKey fromElement offsetX offsetY pageX pageY screenX screenY shiftKey toElement stopPropagation preventDefault timeStamp'.split(' '),
+						event_prop = 'altKey bubbles button buttons cancelable relatedTarget clientX clientY ctrlKey fromElement offsetX offsetY pageX pageY screenX screenY shiftKey toElement timeStamp'.split(' '),
 						target;
 
 					$each(event_prop, function (i, key)
@@ -738,7 +733,7 @@ var
 					elem.attachEvent('on' + types, delegate_fn);
 				}
 
-				$event.global[ guid ][ event_key ][ fn.toString() ] = delegate_fn;
+				$event.global[ guid ][ event_key ][ fn + '' ] = delegate_fn;
 
 				return elem;
 			});
@@ -763,7 +758,7 @@ var
 
 			var guid = context.guid,
 				event_key = (selector || '') + types;
-				fn_key = fn.toString();
+				fn_key = fn + '';
 
 			if (!fn)
 			{
@@ -866,7 +861,7 @@ var
 			{
 				return '';
 			}
-			var unit = value.toString().replace(rnum, '');
+			var unit = (value + '').replace(rnum, '');
 
 			return unit === '' ? 'px' : unit;
 		},
@@ -1243,7 +1238,6 @@ var
 					{
 						style[css_name[css]] = css_value[css] + unit[css];
 					});
-
 				}, 15);
 
 				// Animation completed
@@ -1380,7 +1374,7 @@ var
 				{
 					value = decodeURIComponent(temp[1]);
 
-					return $json.isJSON(value) ? $json.decode(value) : value.toString();
+					return $json.isJSON(value) ? $json.decode(value) : value + '';
 				}
 			}
 
@@ -1613,7 +1607,7 @@ var
 						}
 					}
 				};
-				$append(document.head || document.getElementsByTagName('head')[0] || docElem, item);
+				$append(document.head || $tag(document, 'head')[0] || docElem, item);
 			}
 		});
 	},
@@ -1686,6 +1680,12 @@ $ready(function ()
 		}));
 	}
 });
+
+// Define Qatrix as an AMD module
+if (typeof define === 'function' && define.amd)
+{
+	define('qatrix', [], Qatrix);
+}
 
 // Create a shortcut for compression
 })(window, document);
