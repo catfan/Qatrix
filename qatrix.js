@@ -230,12 +230,12 @@ var
 	$each: function (haystack, callback)
 	{
 		var i = 0,
-			length,
+			length = haystack.length,
 			name;
 
-		if (haystack instanceof Array)
+		if (haystack instanceof Array || length)
 		{
-			for (length = haystack.length; i < length;)
+			for (; i < length;)
 			{
 				if (callback.call(haystack[i], i, haystack[i++]) === false)
 				{
@@ -243,7 +243,7 @@ var
 				}
 			}
 		}
-		if (haystack instanceof Object)
+		else if (haystack instanceof Object)
 		{
 			for (name in haystack)
 			{
