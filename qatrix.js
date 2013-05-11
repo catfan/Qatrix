@@ -259,7 +259,7 @@ var
 		var match = [],
 			elem;
 
-		$each(id.split(' '), function (i, item)
+		$each(id instanceof Array ? id : id.split(' '), function (i, item)
 		{
 			elem = $(item);
 			if (elem !== null)
@@ -268,7 +268,7 @@ var
 			}
 		});
 
-		return mapcall(match, callback);
+		return callback ? mapcall(match, callback) : match;
 	},
 
 	$dom: function (dom, callback)
