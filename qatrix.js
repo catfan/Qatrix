@@ -27,7 +27,7 @@ var
 	rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d\d*\.|)\d+(?:[eE][\-+]?\d+|)/g,
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
 
-	animDisplay = ['height', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'],
+	animDisplay = 'height margin-top margin-bottom padding-top padding-bottom'.split(' '),
 	
 	// For $require loaded resource
 	require_loaded = {},
@@ -96,7 +96,7 @@ var
 			{
 				for (; i < length;)
 				{
-					if (callback.call(match[i], i, match[i++]) === false)
+					if (callback.call(match[i], match[i], match[i++]) === false)
 					{
 						break;
 					}
@@ -235,9 +235,10 @@ var
 	{
 		var i = 0,
 			length = haystack.length,
+			type = typeof haystack,
 			name;
 
-		if (haystack instanceof Array)
+		if (type === 'array' || (type === 'object' && (length - 1) in haystack))
 		{
 			for (; i < length;)
 			{
@@ -247,7 +248,7 @@ var
 				}
 			}
 		}
-		else if (haystack instanceof Object)
+		else if (type === 'object')
 		{
 			for (name in haystack)
 			{
@@ -1219,6 +1220,8 @@ var
 					style = elem.style,
 					css, offset;
 
+				duration = duration || 300;
+
 				for (css in properties)
 				{
 					css_name[css] = $string.camelCase(css);
@@ -1258,7 +1261,7 @@ var
 					{
 						callback(elem);
 					}
-				}, duration || 300);
+				}, duration);
 
 				return elem;
 			});
