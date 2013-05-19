@@ -87,16 +87,20 @@ var
 			return match;
 		}
 
-		var length = match.length;
+		var i = 0,
+			length = match.length;
 
 		if (length !== undefined)
 		{
 			if (length > 0)
 			{
-				$each(match, function (i, item)
+				for (; i < length;)
 				{
-					callback(item);
-				});
+					if (callback.call(match[i], i, match[i++]) === false)
+					{
+						break;
+					}
+				}
 			}
 
 			return match;
@@ -233,7 +237,7 @@ var
 			length = haystack.length,
 			name;
 
-		if (haystack instanceof Array || length)
+		if (haystack instanceof Array)
 		{
 			for (; i < length;)
 			{
@@ -249,6 +253,10 @@ var
 			{
 				callback.call(haystack[name], name, haystack[name]);
 			}
+		}
+		else
+		{
+			callback.call(haystack, 0, haystack);
 		}
 
 		return haystack;
