@@ -170,7 +170,7 @@ var
 				{
 					$each(animDisplay, function (i, css)
 					{
-						style[css] = '';
+						style[$string.camelCase(css)] = '';
 					});
 					style.display = display;
 					style.overflow = overflow;
@@ -1629,8 +1629,7 @@ var
 
 		if (!content)
 		{
-			content =
-				"return '" +
+			content = "return '" +
 				template.replace(/[\r\t\n]/g, " ")
 				.replace(/'(?=[^#]*#>)/g, "\t")
 				.split("'").join("\\'")
