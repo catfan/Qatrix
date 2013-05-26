@@ -32,6 +32,9 @@ var
 	// For $require loaded resource
 	require_loaded = {},
 
+	// For complied template
+	template_cache = {},
+
 	// For DOM ready
 	readyList = [],
 	ready = function ()
@@ -125,7 +128,7 @@ var
 			if (!display)
 			{
 				display = $style.get(elem, 'display');
-				if (display == 'none' || display == 'inherit')
+				if (display === 'none' || display === 'inherit')
 				{
 					temp = $append(document.body, $new(elem.nodeName));
 					display = $style.get(temp, 'display');
@@ -169,7 +172,6 @@ var
 					{
 						style[css] = '';
 					});
-					$style.set(elem, 'opacity', '');
 					style.display = display;
 					style.overflow = overflow;
 
@@ -226,8 +228,6 @@ var
 	Qatrix = {
 	$: function (id)
 	{
-		// Qatrix just returns getElementById directly without additional process for highest performance
-		// For more complex manipulation, use $id
 		return document.getElementById(id);
 	},
 
@@ -1196,7 +1196,7 @@ var
 			style.webkitTransition !== undefined ||
 			style.MozTransition !== undefined ||
 			style.OTransition !== undefined ||
-			style.MsTransition !== undefined ||
+			style.msTransition !== undefined ||
 			style.transition !== undefined
 		);
 	}()) ?
@@ -1206,7 +1206,7 @@ var
 			prefix_name = style.webkitTransition !== undefined ? 'Webkit' :
 				style.MozTransition !== undefined ? 'Moz' :
 				style.OTransition !== undefined ? 'O' :
-				style.MsTransition !== undefined ? 'ms' : '',
+				style.msTransition !== undefined ? 'ms' : '',
 			transition_name = prefix_name + 'Transition';
 
 		return function (elem, properties, duration, callback)
@@ -1621,6 +1621,26 @@ var
 				$append(document.head || $tag(document, 'head')[0] || docElem, item);
 			}
 		});
+	},
+
+	$template: function (template, data)
+	{
+		var content = template_cache[template];
+
+		if (!content)
+		{
+			content =
+				"return '" +
+				template.replace(/[\r\t\n]/g, " ")
+				.replace(/'(?=[^#]*#>)/g, "\t")
+				.split("'").join("\\'")
+				.split("\t").join("'")
+				.replace(/\{\{(.+?)\}\}/g, "'+data.$1+'") +
+				"'";
+
+			template_cache[template] = content;
+		}
+		return new Function("data", content)(data);
 	},
 
 	$url: function (data)
