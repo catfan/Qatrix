@@ -110,7 +110,7 @@ var
 		}
 		else
 		{
-			return callback(match);
+			return callback.call(match, match);
 		}
 	},
 
@@ -177,7 +177,7 @@ var
 
 					if (callback)
 					{
-						callback();
+						callback.call(elem);
 					}
 				});
 			}
@@ -1259,7 +1259,7 @@ var
 
 					if (callback)
 					{
-						callback(elem);
+						callback.call(elem);
 					}
 				}, duration);
 
@@ -1336,7 +1336,7 @@ var
 				}
 				if (callback)
 				{
-					callback(elem);
+					callback.call(elem);
 				}
 			}, duration);
 
