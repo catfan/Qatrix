@@ -552,12 +552,14 @@ var
 		handler: {
 			call: function (event, target, delegate_event, fn)
 			{
+				var handler = $event.handler;
+
 				delegate_event.currentTarget = target;
 
 				if (fn === false || fn.call(target, delegate_event) === false)
 				{
-					event.stopPropagation();
-					event.preventDefault();
+					handler.stopPropagation.call(delegate_event);
+					handler.preventDefault.call(delegate_event);
 				}
 			},
 
@@ -701,7 +703,7 @@ var
 					
 					delegate_event.metaKey = event.metaKey || event.ctrlKey;
 
-					if (!selector && this === target)
+					if (!selector)
 					{
 						$event.handler.call(event, target, delegate_event, fn);
 					}
@@ -709,7 +711,7 @@ var
 					{
 						classSelector = selector ? selector.replace('.', '') : '';
 
-						for (; target != this; target = target.parentNode || this)
+						for (; target !== event.target || event.srcElement; target = target.parentNode)
 						{
 							if (target.tagName.toLowerCase() === selector || $className.has(target, classSelector))
 							{
