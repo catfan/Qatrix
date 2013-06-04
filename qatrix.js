@@ -1631,13 +1631,16 @@ var
 
 		if (!content)
 		{
-			content = "return '" +
+			content = "var s='';s+=\'" +
 				template.replace(/[\r\t\n]/g, " ")
-				.replace(/'(?=[^#]*#>)/g, "\t")
 				.split("'").join("\\'")
 				.split("\t").join("'")
+				.replace(/\{\{#([\w]*)\}\}(.*)\{\{\/(\1)\}\}/ig, function (match, $1, $2)
+				{
+					return "\';var i=0,l=data." + $1 + ".length,d=data." + $1 + ";for(;i<l;i++){s+=\'" + $2.replace(/\{\{(.|this)\}\}/g, "'+d[i]+'").replace(/\{\{(.+?)\}\}/g, "'+d[i].$1+'") + "\'}s+=\'";
+				})
 				.replace(/\{\{(.+?)\}\}/g, "'+data.$1+'") +
-				"'";
+				"';return s;";
 
 			template_cache[template] = content;
 		}
@@ -1656,25 +1659,19 @@ var
 
 	$browser: (function(){
 		var ua = navigator.userAgent.toLowerCase(),
-			browser = {
-				msie: /msie/,
-				msie6: /msie 6\.0/,
-				msie7: /msie 7\.0/,
-				msie8: /msie 8\.0/,
-				msie9: /msie 9\.0/,
-				msie10: /msie 10\.0/,
-				firefox: /firefox/,
-				opera: /opera/,
-				webkit: /webkit/,
-				iPad: /ipad/,
-				iPhone: /iphone/,
-				android: /android/
-			},
-			key;
+			browser = {},
+			data = 'msie|firefox|opera|webkit|iPad|iPhone|android'.split('|'),
+			index = data.length,
+			i = 6;
 
-		for (key in browser)
+		while (index--)
 		{
-			browser[key] = browser[key].test(ua);
+			browser[data[index]] = ua.indexOf(data[index].toLowerCase()) > -1;
+		}
+
+		for (; i < 12; i++)
+		{
+			browser['msie' + i] = ua.indexOf('msie ' + i) > -1;
 		}
 
 		browser.is = function (keyword)
