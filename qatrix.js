@@ -1644,7 +1644,8 @@ var
 
 			template_cache[template] = content;
 		}
-		return new Function("data", content)(data);
+		
+		return data ? new Function("data", content)(data) : new Function("data", content);
 	},
 
 	$url: function (data)
