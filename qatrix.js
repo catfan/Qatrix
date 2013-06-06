@@ -170,10 +170,10 @@ var
 				{
 					$each(animDisplay, function (i, css)
 					{
-						style[$string.camelCase(css)] = '';
+						$css.set(elem, css, '');
 					});
+					style.filter = style.opacity = style.overflow = '';
 					style.display = display;
-					style.overflow = overflow;
 
 					if (callback)
 					{
