@@ -711,17 +711,18 @@ var
 					{
 						classSelector = selector ? selector.replace('.', '') : '';
 
-						while (target.tagName.toLowerCase() !== selector && !$className.has(target, classSelector))
+						for (; target !== elem; target = target.parentNode)
 						{
-							target = target.parentNode;
-						}
+							if (target === null || target === document.body)
+							{
+								return false;
+							}
 
-						if (target === document.body)
-						{
-							return false;
+							if (target.tagName.toLowerCase() === selector || $className.has(target, classSelector))
+							{
+								$event.handler.call(event, target, delegate_event, fn);
+							}
 						}
-
-						return $event.handler.call(event, target, delegate_event, fn);
 					}
 				};
 
