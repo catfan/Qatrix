@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.1
+	Qatrix JavaScript v1.1.1
 
 	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
@@ -9,7 +9,7 @@
 (function (window, document, undefined) {
 
 var
-	version = '1.1',
+	version = '1.1.1',
 
 	docElem = document.documentElement,
 
@@ -236,9 +236,10 @@ var
 		var i = 0,
 			length = haystack.length,
 			type = typeof haystack,
+			is_object = type === 'object',
 			name;
 
-		if (type === 'array' || (type === 'object' && (length - 1) in haystack))
+		if (is_object && (length - 1) in haystack)
 		{
 			for (; i < length;)
 			{
@@ -248,7 +249,7 @@ var
 				}
 			}
 		}
-		else if (type === 'object')
+		else if (is_object)
 		{
 			for (name in haystack)
 			{
@@ -694,6 +695,7 @@ var
 					delegate_event.preventDefault = $event.handler.preventDefault;
 					delegate_event.stopPropagation = $event.handler.stopPropagation;
 					delegate_event.stopImmediatePropagation = $event.handler.stopImmediatePropagation;
+					delegate_event.delegateTarget = elem;
 
 					delegate_event.data = data;
 
