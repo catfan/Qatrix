@@ -1,5 +1,5 @@
 /*
-	Qatrix JavaScript v1.1.1
+	Qatrix JavaScript v1.1.2
 
 	Copyright (c) 2013, Angel Lai
 	The Qatrix project is under MIT license.
@@ -9,7 +9,7 @@
 (function (window, document, undefined) {
 
 var
-	version = '1.1.1',
+	version = '1.1.2',
 
 	docElem = document.documentElement,
 
@@ -93,16 +93,13 @@ var
 		var i = 0,
 			length = match.length;
 
-		if (length !== undefined)
+		if (length !== undefined && length > 0)
 		{
-			if (length > 0)
+			for (; i < length;)
 			{
-				for (; i < length;)
+				if (callback.call(match[i], match[i], match[i++]) === false)
 				{
-					if (callback.call(match[i], match[i], match[i++]) === false)
-					{
-						break;
-					}
+					break;
 				}
 			}
 
@@ -1158,7 +1155,7 @@ var
 			{
 				elem.className = name ? $string.trim(
 					elem.className.replace(
-						new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b', 'g'), '')
+						new RegExp('\\b(' + name.split(rspace).join('|') + ')\\b'), '')
 						.split(rspace)
 						.join(' ')
 				) : '';
