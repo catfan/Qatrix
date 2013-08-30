@@ -1609,6 +1609,7 @@ var
 				{
 					if (event.type === 'load' || (/loaded|complete/.test(item.readyState)))
 					{
+						item.onload = item.onreadystatechange = null;
 						queue.splice(queue.indexOf(src), 1);
 						if (queue.length === 0 && callback)
 						{
