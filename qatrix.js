@@ -291,7 +291,7 @@ var
 	$tag: function (elem, name, callback)
 	{
 		var stack = [],
-			nodeList = elem.getElementsByTagName(className),
+			nodeList = elem.getElementsByTagName(name),
 			l = nodeList.length,
 			i = 0;
 
