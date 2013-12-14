@@ -290,13 +290,33 @@ var
 
 	$tag: function (elem, name, callback)
 	{
-		return mapcall(elem.getElementsByTagName(name), callback);
+		var stack = [],
+			nodeList = elem.getElementsByTagName(className),
+			l = nodeList.length,
+			i = 0;
+
+		for ( ;i < l; i++)
+		{
+			stack.push( nodeList[ i ] );
+		}
+
+		return mapcall(stack, callback);
 	},
 
 	$class: document.getElementsByClassName ?
 	function (elem, className, callback)
 	{
-		return mapcall(elem.getElementsByClassName(className), callback);
+		var stack = [],
+			nodeList = elem.getElementsByClassName(className),
+			l = nodeList.length,
+			i = 0;
+
+		for ( ;i < l; i++)
+		{
+			stack.push( nodeList[ i ] );
+		}
+
+		return mapcall(stack, callback);
 	} :
 	function (elem, className, callback)
 	{
