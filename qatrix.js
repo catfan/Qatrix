@@ -295,12 +295,19 @@ var
 			l = nodeList.length,
 			i = 0;
 
-		for ( ;i < l; i++)
+		if (l > 0)
 		{
-			stack.push( nodeList[ i ] );
-		}
+			for ( ;i < l; i++)
+			{
+				stack.push( nodeList[ i ] );
+			}
 
-		return mapcall(stack, callback);
+			return mapcall(stack, callback);
+		}
+		else
+		{
+			return stack;
+		}
 	},
 
 	$class: document.getElementsByClassName ?
@@ -311,12 +318,19 @@ var
 			l = nodeList.length,
 			i = 0;
 
-		for ( ;i < l; i++)
+		if (l > 0)
 		{
-			stack.push( nodeList[ i ] );
-		}
+			for ( ;i < l; i++)
+			{
+				stack.push( nodeList[ i ] );
+			}
 
-		return mapcall(stack, callback);
+			return mapcall(stack, callback);
+		}
+		else
+		{
+			return stack;
+		}
 	} :
 	function (elem, className, callback)
 	{
