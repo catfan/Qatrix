@@ -28,7 +28,7 @@ var
 	rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g,
 
 	animDisplay = 'height margin-top margin-bottom padding-top padding-bottom'.split(' '),
-	
+
 	// For $require loaded resource
 	require_loaded = {},
 
@@ -592,7 +592,11 @@ var
 				{
 					handler.stopPropagation.call(delegate_event);
 					handler.preventDefault.call(delegate_event);
+
+					event.isStopPropagation = true;
 				}
+
+				return event;
 			},
 
 			preventDefault: function ()
@@ -727,6 +731,7 @@ var
 					delegate_event.stopPropagation = $event.handler.stopPropagation;
 					delegate_event.stopImmediatePropagation = $event.handler.stopImmediatePropagation;
 					delegate_event.delegateTarget = elem;
+					delegate_event.isStopPropagation = false;
 
 					delegate_event.data = data;
 
@@ -746,6 +751,11 @@ var
 
 						for (; target !== elem; target = target.parentNode)
 						{
+							if (event.isStopPropagation === true)
+							{
+								return false;
+							}
+
 							if (target === null || target === document.body)
 							{
 								return false;
@@ -753,7 +763,7 @@ var
 
 							if (target.tagName.toLowerCase() === selector || $className.has(target, classSelector))
 							{
-								$event.handler.call(event, target, delegate_event, fn);
+								event = $event.handler.call(event, target, delegate_event, fn);
 							}
 						}
 					}
