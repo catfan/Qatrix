@@ -1,0 +1,26 @@
+{
+  "name": "qatrix",
+  "version": "0.1.0",
+  "homepage": "https://github.com/MillerRen/Qatrix",
+  "authors": [
+    "Miller Ren <ren12345@126.com>"
+  ],
+  "description": "A new lightweight JavaScript framework for high performance web application with less code",
+  "main": "qatrix.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "js",
+    "framework",
+    "lightweight"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
