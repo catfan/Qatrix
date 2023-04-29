@@ -222,6 +222,17 @@ var
 		elem.detachEvent('on' + type, fn);
 	},
 
+	// Test localStorage
+	isSupportLocalStorage = (function() {
+		try {
+			localStorage.setItem('test', 'test');
+			localStorage.removeItem('test');
+			return true;
+		} catch(e) {
+			return false;
+		}
+	})(),
+
 	Qatrix = {
 	$: function (id)
 	{
@@ -526,7 +537,7 @@ var
 		}
 	},
 
-	$storage: window.localStorage ?
+	$storage: isSupportLocalStorage ?
 	{
 		set: function (name, value)
 		{
@@ -1731,7 +1742,7 @@ $ready(function ()
 		Qatrix.Qselector = $append(document.body, $new('style'));
 	}
 	// For hack storage
-	if (!window.localStorage)
+	if (!isSupportLocalStorage)
 	{
 		Qatrix.storage = $append(document.body, $new('link', {
 			'style': {
